@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+# !/usr/bin/env python
 # coding: utf-8
 
 # Demonstrate some generic techniques for sonifying 1D data
@@ -14,7 +14,6 @@ import IPython.display as ipd
 import os
 from scipy.interpolate import interp1d
 import numpy as np
-
 
 
 # Now, we construct some mock data!
