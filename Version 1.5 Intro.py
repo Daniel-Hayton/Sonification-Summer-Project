@@ -34,7 +34,8 @@ Lets try some out...
 """
 
 windy = strauss.sonify(x, y, style='flute_section')
-strauss.display()
+windy.render()
+windy.hear()
 
 """The strauss figure can then be closed for a fresh sonification."""
 
@@ -46,19 +47,19 @@ Let's try some other styles, for example the default (either writing `style='def
 """
 
 windy = strauss.sonify(x, y, style='default')
-strauss.display()
+strauss.hear()
 strauss.close()
 
 """Or other styles. Some styles pull resources from online, and store these in the cache, for example the `mallets`, which uses a directory of indivdual struck samples, and maps y onto a serious of harmonious notes:"""
 
 windy = strauss.sonify(x, y, style='mallets')
-strauss.display()
+strauss.hear()
 strauss.close()
 
 """...or `flute_section`, which makes use of a _Soundfont_ file (`.sf2` extension), that contains audio samples of flutes. Here we hold a harmonious chord and the cutoff frequency changes the _timbre_ of the sound:"""
 
 windy = strauss.sonify(x, y, style='flute_section')
-strauss.display()
+strauss.hear()
 strauss.close()
 
 """## Combining sonifications
@@ -70,21 +71,21 @@ Let's set this up so we use the default and `windy` styles together to represent
 
 strauss.sonify(x, y)
 strauss.sonify(x, -y, style='windy')
-strauss.display()
+strauss.hear()
 strauss.close()
 
 """Individual sonifications can be given names, and have volume levels set to allow tweaking of the different elements"""
 
 strauss.sonify(x, y, name='sin(x)', level='-20 db')
 strauss.sonify(x, -y, style='windy', name='-sin(x)', level='0 db')
-strauss.display()
+strauss.hear()
 
 """...and adjusted after the fact"""
 
 strauss.set_level('sin(x)', '0 dB')
 strauss.set_level('-sin(x)', '-10 dB')
 
-strauss.display()
+strauss.hear()
 strauss.close()
 
 """## Fixed Properties
@@ -94,13 +95,13 @@ We can also fix properties of our choice. This can be set inside the style file 
 
 strauss.sonify(x, y, name='sin(x)', fix_pan=0.3)
 strauss.sonify(x, -y, style='windy', name='-sin(x)', fix_pan=0.7)
-strauss.display()
+strauss.hear()
 strauss.close()
 
 """Fixed values ae generally set using a ***fractional*** value (i.e. between 0 and 1), with the exception of 3D angles, `azimuth` and `polar` which expect values in degrees - from 0° to 360° and 0° to 180°, respectively:"""
 
-strauss.sonify(x, -y, fix_azimuth=90, fix_polar=80)
-strauss.display()
+soni = strauss.sonify(x, -y, fix_azimuth=90, fix_polar=80)
+soni.hear()
 strauss.close()
 
 """## Finishing up my sonification
@@ -137,7 +138,7 @@ fs_style = strauss.get_style('flute_section', print_style=True)
 with open('test.yml', 'w') as f:
     f.write(fs_style)
 windy = strauss.sonify(x, y, style='test.yml')
-strauss.display()
+windy.hear()
 strauss.close()
 
 """We can try modifying this style, for example the notes (to `['G2', 'D3', 'Bb3', 'F4', 'Bb4']`), for a minor sound:"""
@@ -171,5 +172,5 @@ notes: ['G2', 'D3', 'Bb3', 'F4', 'Bb4']
 with open('test.yml', 'w') as f:
     f.write(fs_style)
 windy = strauss.sonify(x, y, style='test.yml')
-strauss.display()
+windy.here()
 strauss.close()
