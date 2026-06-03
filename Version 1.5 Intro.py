@@ -1,5 +1,3 @@
-
-
 """# Styles and High-level Interface
 
 In `strauss` v2 we present an accessible, high-level interface.
@@ -14,11 +12,11 @@ import matplotlib.pyplot as plt
 """First Generate some artificial data, *`x`*, *`y`* and *`z`*"""
 
 x = np.linspace(0, 90, 400)
-y =  np.sin(x/2)
-z = 0.1*x**2 - x - 5
+y = np.sin(x / 2)
+z = 0.1 * x ** 2 - x - 5
 plt.xlabel('Parameter #1 (x)')
 plt.ylabel('Parameter #2 (y)')
-plt.plot(x,y)
+plt.plot(x, y)
 plt.show()
 
 """## Trying some indivdual styles

@@ -1,7 +1,4 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# ### <u> Generate the Planetary Orbit sonifications used in the "_Audible Universe_" planetarium show </u>
+# Generate the Planetary Orbit sonifications used in the "_Audible Universe_" planetarium show </u>
 
 # **First, import relevant modules:**
 
@@ -19,8 +16,9 @@ import os
 from pathlib import Path
 
 
-# **Collate the notes we are using to represent each planet and their orbital periods, as well as the length of each sonification**
-# 
+# **Collate the notes we are using to represent each planet and their orbital periods, as well as the length of each
+# sonification**
+
 # Then, combine these into dictionaries so they can be easily indexed
 
 print("\n Sonifying the stereo planet orbits example...")

@@ -1,7 +1,4 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# ### <u> Generate the sunrise to sunset sonification used in the "_Audible Universe_" planetarium show </u>
+# Generate the sunrise to sunset sonification used in the "_Audible Universe_" planetarium show </u>
 
 import matplotlib.pyplot as plt
 import ffmpeg as ff
@@ -28,7 +25,7 @@ if list(Path(f"{outdir}").glob("*.wav")):
     print(f"Directory {outdir} already exists.")
 else:
     print("Downloading files...")
-    import urllib.request
+    import urllib.request  # Problem
     
     Path('..', 'data', 'samples', 'day_sequence').mkdir(parents=True, exist_ok=True)
     

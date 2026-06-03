@@ -1,7 +1,4 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# ### <u> Generate the Earth rotation sound for the Planetarium Show</u>
+# Generate the Earth rotation sound for the Planetarium Show</u>
 # **First, import relevant modules:**
 
 import matplotlib.pyplot as plt

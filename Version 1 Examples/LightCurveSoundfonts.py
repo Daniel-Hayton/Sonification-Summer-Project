@@ -1,12 +1,8 @@
-#!/usr/bin/env python
-# coding: utf-8
+# Using Soundfont (`sf2`) files in `strauss` </u>
 
-# ### <u> Using Soundfont (`sf2`) files in `strauss` </u>
-
-# Soundfont files conveniently package recorded samples of musical instruments together, to build realistic sounding virtual instruments. 
-# 
+# Soundfont files conveniently package recorded samples of musical instruments together, to build realistic sounding
+# virtual instruments.
 # We can read such files into `strauss` when sonifying data!
-# 
 # First we import some modules:
 
 import matplotlib.pyplot as plt
@@ -23,9 +19,13 @@ import copy
 from pathlib import Path
 
 
-# ...and then download some soundfont (`sf2`) files. These are widely available online, and in particular we download some collected on the [_Soundfonts 4 U_](https://sites.google.com/site/soundfonts4u/) website (and hsted on _Google Drive_). Why not experiment with some of the other files hosted here? We select a flute and a collection of guitar sounds as these are small enough to automatically download.
+# ...and then download some soundfont (`sf2`) files. These are widely available online, and in particular we download
+# some collected on the [_Soundfonts 4 U_](https://sites.google.com/site/soundfonts4u/) website (and hsted on _Google
+# Drive_). Why not experiment with some of the other files hosted here? We select a flute and a collection of guitar
+# sounds as these are small enough to automatically download.
 # 
-# Don't worry too much about this code, you can equally download these files through your browser if you find this more convenient
+# Don't worry too much about this code, you can equally download these files through your browser if you find this
+# more convenient
 
 outdir = Path("..", "data", "samples", "soundfonts")
 
