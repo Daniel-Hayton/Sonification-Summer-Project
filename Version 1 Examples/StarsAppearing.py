@@ -1,7 +1,4 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# ### <u> Generate the "_Stars Appearing_" sonification used in the "_Audible Universe_" planetarium show </u>
+# Generate the "_Stars Appearing_" sonification used in the "_Audible Universe_" planetarium show </u>
 
 # First, we import relevant modules:
 
@@ -21,12 +18,17 @@ from pathlib import Path
 
 # <u> __The Score:__ </u>
 # 
-# We set up the ***Score***; this is analagous to a musical score and controls what notes can be played over the course of the sonification. We can specify a chord sequence as a single string (`str`) where chord names are separated by a `|` character. The root octave of the chord may also be specified by adding `_X` where `X` is the octave number. <span style="color:gray">_(Note: for now, each chord occupies an equal lenth in the sonification, in the future chord change times can be directly specified and optionally related to events in the data)_</span>
+# We set up the ***Score***; this is analagous to a musical score and controls what notes can be played over the
+# course of the sonification. We can specify a chord sequence as a single string (`str`) where chord names are
+# separated by a `|` character. The root octave of the chord may also be specified by adding `_X` where `X` is the
+# octave number. <span style="color:gray">_(Note: for now, each chord occupies an equal lenth in the sonification,
+# in the future chord change times can be directly specified and optionally related to events in the data)_</span>
 # 
 # We can directly specify the ___chord voicing___ as 
 # a list of lists containing the notes from low to high in each chord.
 # 
-# Here, we  are directly specifying a single __`Db6/9`__ chord voicing. These notes will later be played by stars of different colours!
+# Here, we  are directly specifying a single __`Db6/9`__ chord voicing. These notes will later be played by stars of
+# different colours!
 
 
 chords = [['Db3','Gb3', 'Ab3', 'Eb4','F4']]

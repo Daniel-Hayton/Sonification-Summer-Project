@@ -24,11 +24,8 @@ print(f"Available text-to-speech (TTS) is: {mode}")
 
 # Generate a placeholder sonification (a short sequence of glockenspiel notes) that we may want to add a caption to:
 
-# platform agnostic absolute path for samples...
-strauss_dir = Path(strauss.__file__).parents[2]
-print(strauss_dir)  # Problem
 
-sample_path = Path(strauss_dir, 'data', 'samples', 'glockenspiels')
+sample_path = Path('..', 'data', 'samples', 'glockenspiels')
 # setup used in stars appearing example
 chords = [['Db3', 'Gb3', 'Ab3', 'Eb4', 'F4']]
 length = 6

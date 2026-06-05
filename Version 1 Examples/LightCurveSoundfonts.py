@@ -25,7 +25,7 @@ from pathlib import Path
 # sounds as these are small enough to automatically download.
 # 
 # Don't worry too much about this code, you can equally download these files through your browser if you find this
-# more convenient
+# more convenient''
 
 outdir = Path("..", "data", "samples", "soundfonts")
 
@@ -40,7 +40,7 @@ else:
     path.mkdir(parents=True, exist_ok=True)
     path = str(path)
     
-    files = ("guitars.sf2", "flute.sf2")
+    files = ("flute.sf2", "guitars.sf2")
     urls = ("https://huggingface.co/datasets/projectlosangeles/soundfonts4u/resolve/main/Guitars-Universal-V1.5.sf2",
            "https://huggingface.co/datasets/projectlosangeles/soundfonts4u/resolve/main/Expressive%20Flute%20SSO-v1.2.sf2")
     for f, u in zip(files, urls):
