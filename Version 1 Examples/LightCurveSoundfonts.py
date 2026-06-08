@@ -1,5 +1,5 @@
 # Using Soundfont (`sf2`) files in `strauss` </u>
-
+import matplotlib
 # Soundfont files conveniently package recorded samples of musical instruments together, to build realistic sounding
 # virtual instruments.
 # We can read such files into `strauss` when sonifying data!
@@ -187,7 +187,9 @@ print("Sonifying the 55 Cancri light-curve, using an Object source type. Mapping
 soni = Sonification(score, sources, generator, system)
 soni.render()
 dobj = soni.hear()
-# plt.plot(x,y)
-# plt.ylabel('Magnitude')
-# plt.xlabel('Time (Julian Days)')
-
+matplotlib.use("TKAGG", force=True)
+plt.style.use("dark_background")
+plt.plot(x,y)
+plt.ylabel('Magnitude')
+plt.xlabel('Time (Julian Days)')
+plt.show()

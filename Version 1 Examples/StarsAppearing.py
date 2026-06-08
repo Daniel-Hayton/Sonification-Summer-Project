@@ -26,7 +26,8 @@ from pathlib import Path
 # 
 # We can directly specify the ___chord voicing___ as 
 # a list of lists containing the notes from low to high in each chord.
-# 
+
+#
 # Here, we  are directly specifying a single __`Db6/9`__ chord voicing. These notes will later be played by stars of
 # different colours!
 

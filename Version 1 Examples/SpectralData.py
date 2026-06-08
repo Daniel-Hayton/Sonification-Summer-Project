@@ -10,6 +10,7 @@ import os
 from scipy.interpolate import interp1d
 import numpy as np
 from pathlib import Path
+import matplotlib
 
 # In other examples we use a 'parameter mapping' approach for one-dimensional data series, where we map _y_ as a
 # function of _x_ using the change in some expressive property of sound (e.g. `pitch_shift`) as a function of time.
@@ -30,14 +31,15 @@ spectral_data2 = np.genfromtxt(Path('..', 'data', 'datasets', 'NGC6302.csv'), de
 wlen2 = spectral_data2[:, 0]
 fluxdens2 = spectral_data2[:, 1]
 
-# spectrum needs to be provided to the Spectraliser in frequency order (i.e. low to high), 
-# so we ensure it is sorted that way... 
+# spectrum needs to be provided to the Spectraliser in frequency order (i.e. low to high),
+# so we ensure it is sorted that way...
 spec1 = fluxdens1[np.argsort(1 / wlen1)]
 spec2 = fluxdens2[np.argsort(1 / wlen2)]
 wlen1 = wlen1[np.argsort(1 / wlen1)]
 wlen2 = wlen2[np.argsort(1 / wlen2)]
 
 # plot the spectra vs wavlength
+matplotlib.use("TkAgg", force=True)
 plt.style.use("dark_background")
 plt.figure()
 plt.plot(wlen1, spec1 / spec1.max(), label='NGC1535')
@@ -45,7 +47,7 @@ plt.plot(wlen2, spec2 / spec2.max(), alpha=0.6, label='NGC6302')
 plt.xlabel('Wavelength [Angstrom]')
 plt.ylabel('Flux')
 plt.legend(frameon=False)
-# plt.show()
+plt.show()
 plt.close()
 
 # plot the spectra vs frequency
@@ -118,7 +120,7 @@ plt.close()
 
 # ### <u>Example 2</u> &nbsp; **Evolving Spectra and Image Sonification**
 
-# We could also perform a `Object` type sonification with an evolving Spectrum. 
+# We could also perform a `Object` type sonification with an evolving Spectrum.
 
 # An evolving spectrum can be represented as a 2D array, similar to a regular image. Using this similarity, the `Spectraliser` provides a neat way to sonify images!
 

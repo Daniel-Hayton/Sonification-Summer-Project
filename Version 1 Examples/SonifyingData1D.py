@@ -1,7 +1,6 @@
 # Demonstrate some generic techniques for sonifying 1D data
 # First, import relevant modules:
 
-import matplotlib.pyplot as plt
 from strauss.sonification import Sonification
 from strauss.sources import Objects
 from strauss import channels
@@ -11,6 +10,11 @@ import IPython.display as ipd
 import os
 from scipy.interpolate import interp1d
 import numpy as np
+
+import matplotlib
+#matplotlib.use("TkAgg", force=True)
+
+import matplotlib.pyplot as plt
 
 # Now, we construct some mock data!
 # We use seeded random numbers to generate a mock 1D data set with features and noise:
@@ -43,6 +47,7 @@ plt.plot(x, y)
 plt.ylabel('Some dependent Variable')
 plt.xlabel('Some independent Variable')
 plt.show()
+
 
 # Set up some universal sonification parameters and classes for the examples below
 # For all examples we use the `Synthesizer` generator to create a 30 second, mono sonification.

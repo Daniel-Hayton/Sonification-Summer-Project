@@ -1,6 +1,4 @@
 # Generate the Earth rotation sound for the Planetarium Show</u>
-# **First, import relevant modules:**
-
 import matplotlib.pyplot as plt
 import ffmpeg as ff
 import wavio as wav
@@ -15,33 +13,35 @@ import os
 from scipy.interpolate import interp1d
 from pathlib import Path
 
+# Then, import the land fraction data**
 
-# **Then, import the land fraction data**
-# 
-# The land fraction as a function of longitude is converted to a water fraction (i.e. $1-f_{\rm water}$), and mapped of three rotation cycles to control the LP filter cutoff. This is normalised to a range within the [0,1] range, chosen to sound good.
+# The land fraction as a function of longitude is converted to a water fraction (i.e. $1-f_{\rm water}$), and mapped
+# of three rotation cycles to control the LP filter cutoff. This is normalised to a range within the [0,1] range,
+# chosen to sound good.
 
 print("\n Sonifying Earth's rotation, using the land covering fraction with longitude...")
 
 datafile = Path("..", "data", "datasets", "landfrac.txt")
 data = np.genfromtxt(datafile)
 
-longitude = data[:,0]
-waterfrac = 1-data[:,1]
+longitude = data[:, 0]
+waterfrac = 1 - data[:, 1]
 
-startlong = 180-(96 + 15./60 + 2.2/3600)
+startlong = 180 - (96 + 15. / 60 + 2.2 / 3600)
 # we travel backwards in longitude per the earth's rotation
-longgrid = (np.linspace(startlong,720+startlong,2599)%360 - 180.)[::-1] 
+longgrid = (np.linspace(startlong, 720 + startlong, 2599) % 360 - 180.)[::-1]
 wfrac = interp1d(longitude, waterfrac)
 
-wfracgrid = wfrac(longgrid)*0.75 + 0.15
-timegrid = np.linspace(0,1,wfracgrid.size)
+wfracgrid = wfrac(longgrid) * 0.75 + 0.15
+timegrid = np.linspace(0, 1, wfracgrid.size)
 
 # uncomment to show plot...
-
-# plt.plot(timegrid, wfracgrid)
-# plt.ylabel("Normalised Water Fraction")
-# plt.xlabel(r"${\rm Rotation}\; [6\pi]$")
-# plt.show()
+plt.style.use("dark_background")
+plt.figure()
+plt.plot(timegrid, wfracgrid)
+plt.ylabel("Normalised Water Fraction")
+plt.xlabel(r"${\rm Rotation}\; [6\pi]$")
+plt.show()
 
 # and set up the synthesiser
 
@@ -55,17 +55,16 @@ length = 60.
 
 # set up synth and turn on LP filter
 generator = Synthesizer()
-generator.modify_preset({'filter':'on'}) 
-
+generator.modify_preset({'filter': 'on'})
 
 # Map the data and render sonification for the Earth's rotation...
 
-score =  Score(notes, length)
+score = Score(notes, length)
 
 # volume swell is directly ahead
-data = {'cutoff':[wfracgrid]*4,
-        'time_evo':[timegrid]*4,
-        'pitch':list(range(4))}
+data = {'cutoff': [wfracgrid] * 4,
+        'time_evo': [timegrid] * 4,
+        'pitch': list(range(4))}
 
 # set up source
 sources = Objects(data.keys())
@@ -82,4 +81,3 @@ soni.hear()
 # NOTE: Change `"../../FILENAME.wav"` to your filepath of choice
 
 # soni.save_combined(Path("..", "..", "earth.wav"), True)
-
