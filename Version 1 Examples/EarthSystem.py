@@ -13,6 +13,11 @@ import os
 from scipy.interpolate import interp1d
 from pathlib import Path
 
+import matplotlib
+matplotlib.use("Tkagg", force=True)
+plt.style.use("dark_background")
+
+
 # Then, import the land fraction data**
 
 # The land fraction as a function of longitude is converted to a water fraction (i.e. $1-f_{\rm water}$), and mapped
@@ -36,7 +41,6 @@ wfracgrid = wfrac(longgrid) * 0.75 + 0.15
 timegrid = np.linspace(0, 1, wfracgrid.size)
 
 # uncomment to show plot...
-plt.style.use("dark_background")
 plt.figure()
 plt.plot(timegrid, wfracgrid)
 plt.ylabel("Normalised Water Fraction")

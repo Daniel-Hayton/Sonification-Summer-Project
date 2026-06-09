@@ -1,5 +1,4 @@
 # Using Soundfont (`sf2`) files in `strauss` </u>
-import matplotlib
 # Soundfont files conveniently package recorded samples of musical instruments together, to build realistic sounding
 # virtual instruments.
 # We can read such files into `strauss` when sonifying data!
@@ -18,58 +17,34 @@ import os
 import copy
 from pathlib import Path
 
+import matplotlib
+matplotlib.use("Tkagg", force=True)
+plt.style.use("dark_background")
 
 # ...and then download some soundfont (`sf2`) files. These are widely available online, and in particular we download
 # some collected on the [_Soundfonts 4 U_](https://sites.google.com/site/soundfonts4u/) website (and hsted on _Google
 # Drive_). Why not experiment with some of the other files hosted here? We select a flute and a collection of guitar
 # sounds as these are small enough to automatically download.
-# 
-# Don't worry too much about this code, you can equally download these files through your browser if you find this
-# more convenient''
 
 outdir = Path("..", "data", "samples", "soundfonts")
-
-if list(Path(f"{outdir}").glob("*.sf2")):
-    print(f"Directory {outdir} with sf2 files already exists.")
-else:
-    print("Downloading files...")
-    import urllib.request
-    import os
-
-    path = Path(outdir)
-    path.mkdir(parents=True, exist_ok=True)
-    path = str(path)
-    
-    files = ("flute.sf2", "guitars.sf2")
-    urls = ("https://huggingface.co/datasets/projectlosangeles/soundfonts4u/resolve/main/Guitars-Universal-V1.5.sf2",
-           "https://huggingface.co/datasets/projectlosangeles/soundfonts4u/resolve/main/Expressive%20Flute%20SSO-v1.2.sf2")
-    for f, u in zip(files, urls):
-        with urllib.request.urlopen(u) as response, Path(f"{path}",f"{f}").open(mode='wb') as out_file:
-            print(f"\t getting {f}")
-            data = response.read() # a `bytes` object
-            out_file.write(data)
-    print("Done.")
-
 
 # Now we have these files, lets try loading them into the sampler.
 # 
 # First the ***flute*** soundfont. Generally soundfonts can store multiple different instruments or sets of sounds as `"presets"`. The flute file has just a single flute instruments, so if we load this file it should pick this preset automatically with no complaints.
 
-flute_sampler = Sampler(Path(outdir,"flute.sf2"))
+flute_sampler = Sampler(Path(outdir, "flute.sf2"))
 
+# On the other hand, the ***guitar*** file has multiple presets. If we try loading this in in the same way, the `_strauss_` sampler will default to picking the first preset to use, but will print a list of all of the presets and thier associated numbers.
 
-# On the other hand, the ***guitar*** file has multiple presets. If we try loading this in in the same way, the `_strauss_` sampler will default to picking the first preset to use, but will print a list of all of the presets and thier associated numbers. 
-
-print("\nAn example of preset selection for the Sampler (note this is overridden in the script with a pre-chosen preset).\n")
-guitar_sampler = Sampler(Path(outdir, "guitars.sf2"))
-
+print(
+    "\nAn example of preset selection for the Sampler (note this is overridden in the script with a pre-chosen preset).\n")
+#guitar_sampler = Sampler(Path(outdir, "guitars.sf2"))
 
 # This can be useful to inspect whats inside the soundfont file. If we already know which preset we want (by e.g. inspecting this list), we can pick the preset ahead of time, using the `sf_preset` keyword argument:
 
 
 sf_preset = 49
-guitar_sampler= Sampler(Path(outdir,"flute.sf2"), sf_preset=sf_preset)
-
+guitar_sampler = Sampler(Path(outdir, "guitars.sf2"), sf_preset=sf_preset)
 
 # So, lets try using these files to sonify data series. We use light-curve data packaged for the star `55 Cancri`. This provides a noisy data set with interesting long and short term variations, as well as a gap in the data.
 # 
@@ -81,63 +56,65 @@ guitar_sampler= Sampler(Path(outdir,"flute.sf2"), sf_preset=sf_preset)
 # 
 # You should find it harder to the clear articulation of individual data points, for example the regular dips in the light curve are harder to hear - this can sound good, but is less informative. Note also how we hear the large gap in data points where the sound stops for some time.
 
-# In[ ]:
-
 
 # pick a soundfont to use
 
-#generator = guitar_sampler
+# generator = guitar_sampler
 generator = copy.copy(flute_sampler)
 
 lightcurve = np.genfromtxt(Path('..', 'data', 'datasets', '55Cancri_lc.dat'))
-x = lightcurve[:,0][:]
-y = lightcurve[:,1][:]
+x = lightcurve[:, 0][:]
+y = lightcurve[:, 1][:]
 
-notes = [["C3","D3","E3","G3","B3","C4","D4","E4","G4","B4","C5","D5","E5","G5","B5"]]
+notes = [["C3", "D3", "E3", "G3", "B3", "C4", "D4", "E4", "G4", "B4", "C5", "D5", "E5", "G5", "B5"]]
 
-score =  Score(notes, 15)
-        
-maps = {'pitch':y,
+score = Score(notes, 15)
+
+maps = {'pitch': y,
         'time': x}
 
 system = "mono"
 
 # manually set note properties to get a suitable sound
-generator.modify_preset({'note_length':0.03, # hold each note for 0.03 seconds or 30 ms - what if this was 1s?
-                         'volume_envelope': {'use':'on',
-                                            # A,D,R values in seconds, S sustain fraction from 0-1 that note
-                                            # will 'decay' to (after time A+D)
-                                            'A':0.01,    # ✏️ Time to fade in note to maximum volume, using 10 ms
-                                            'D':0.0,    # ✏️ Time to fall from maximum volume to sustained level (s), irrelevant while S is 1 
-                                            'S':1.,      # ✏️ fraction of maximum volume to sustain note at while held, 1 implies 100% 
-                                            'R':0.07}}) # ✏️ Time to fade out once note is released, using 100 ms
+# generator.modify_preset({'note_length': 0.03,  # hold each note for 0.03 seconds or 30 ms - what if this was 1s?
+#                          'volume_envelope': {'use': 'on',
+#                                              # A,D,R values in seconds, S sustain fraction from 0-1 that note
+#                                              # will 'decay' to (after time A+D)
+#                                              'A': 0.01,  # ✏️ Time to fade in note to maximum volume, using 10 ms
+#                                              'D': 0.0,
+#                                              # ✏️ Time to fall from maximum volume to sustained level (s), irrelevant while S is 1
+#                                              'S': 1.,
+#                                              # ✏️ fraction of maximum volume to sustain note at while held, 1 implies 100%
+#                                              'R': 0.07}})  # ✏️ Time to fade out once note is released, using 100 ms
 
 # alternatively can avoid setting manually above anf just load the 'staccato' preset
-# generator.load_preset('staccato')
+generator.load_preset('staccato')
 
 # set 0 to 100 percentile limits so the full pitch range is used...
 # setting 0 to 101 for pitch means the sonification is 1% longer than
 # the time needed to trigger each note - by making this more than 100%
 # we give all the notes time to ring out (setting this at 100% means
 # the final note is triggered at the momement the sonification ends)
-lims = {'time': ('0%','101%'),
-        'pitch': ('0%','100%')}
+lims = {'time': ('0%', '101%'),
+        'pitch': ('0%', '100%')}
 
 # set up source
 sources = Events(maps.keys())
 sources.fromdict(maps)
 sources.apply_mapping_functions(map_lims=lims)
 
-print("Sonifying the 55 Cancri light-curve, using an Events source type. Mapping musical pitch to brightness over time (brighter => higher pitch)...")
+plt.scatter(x,y, marker='.')
+plt.ylabel('Magnitude')
+plt.xlabel('Time (Julian Days)')
+plt.show()
+
+
+print(
+    "Sonifying the 55 Cancri light-curve, using an Events source type. Mapping musical pitch to brightness over time (brighter => higher pitch)...")
 
 soni = Sonification(score, sources, generator, system)
 soni.render()
 dobj = soni.hear()
-
-# plt.scatter(x,y, marker='.')
-# plt.ylabel('Magnitude')
-# plt.xlabel('Time (Julian Days)')
-
 
 # For a different approach, we can use an `Object` source type, where we evolve a sound over time to represent the data. Here we represent the same data using a held chord, and change the _`"cutoff"`_ frequency of the low-pass filter to create a 'brighter' timbre when the star is brighter and a 'darker' sound when the star is darker.
 # 
@@ -153,43 +130,44 @@ dobj = soni.hear()
 
 # pick a soundfont to use
 
-generator = copy.copy(guitar_sampler)
-#generator = flute_sampler
+# generator = copy.copy(guitar_sampler)
+# generator = flute_sampler
+# generator = copy.copy(flute_sampler)
+generator = Sampler(Path(outdir, "flute.sf2"))
 
-generator.modify_preset({'filter':'on'})
+generator.modify_preset({'filter': 'on'})
 
-# manually set looping parameters 
-generator.modify_preset({'looping':'forwardback',
-                         'loop_start': 0.2, 'loop_end': 0.5}) # ✏️ for such a fast sequence, using ~10 ms values
+# manually set looping parameters
+# generator.modify_preset({'looping': 'forwardback',
+#                          'loop_start': 0.2, 'loop_end': 0.5})  # ✏️ for such a fast sequence, using ~10 ms values
 
 # or, just load the 'sustain' preset
-# generator.load_preset('sustain')
+generator.load_preset('sustain')
 
 # we use a 'chord' here to create more harmonic richness (stacking fifths)...
 notes = [["E2", "B2"]]
-score =  Score(notes, 15)
+score = Score(notes, 15)
 
-data = {'pitch':[0,1,2,3],
-        'time_evo':[x]*4,
-        'cutoff':[y]*4}
+data = {'pitch': [0, 1, 2, 3],
+        'time_evo': [x] * 4,
+        'cutoff': [y] * 4}
 
-lims = {'time_evo': ('0%','100%'),
-        'cutoff': ('0%','100%')}
+lims = {'time_evo': ('0%', '100%'),
+        'cutoff': ('0%', '100%')}
 
 # set up source
 sources = Objects(data.keys())
 sources.fromdict(data)
-plims = {'cutoff': (0.25,0.95)}
+plims = {'cutoff': (0.25, 0.95)}
 sources.apply_mapping_functions(map_lims=lims, param_lims=plims)
 
-print("Sonifying the 55 Cancri light-curve, using an Object source type. Mapping timbre to brightness over time (brighter => 'brighter' sound)...")
+print(
+    "Sonifying the 55 Cancri light-curve, using an Object source type. Mapping timbre to brightness over time (brighter => 'brighter' sound)...")
+plt.plot(x, y)
+plt.ylabel('Magnitude')
+plt.xlabel('Time (Julian Days)')
+plt.show()
 
 soni = Sonification(score, sources, generator, system)
 soni.render()
 dobj = soni.hear()
-matplotlib.use("TKAGG", force=True)
-plt.style.use("dark_background")
-plt.plot(x,y)
-plt.ylabel('Magnitude')
-plt.xlabel('Time (Julian Days)')
-plt.show()
