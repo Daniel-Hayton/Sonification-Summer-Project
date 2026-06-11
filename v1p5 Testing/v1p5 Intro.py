@@ -9,11 +9,17 @@ import strauss
 import numpy as np
 import matplotlib.pyplot as plt
 
+import matplotlib
+matplotlib.use("Tkagg", force=True)
+plt.style.use("dark_background")
+
+
 """First Generate some artificial data, *`x`*, *`y`* and *`z`*"""
 
 x = np.linspace(0, 90, 400)
 y = np.sin(x / 2)
 z = 0.1 * x ** 2 - x - 5
+plt.figure()
 plt.xlabel('Parameter #1 (x)')
 plt.ylabel('Parameter #2 (y)')
 plt.plot(x, y)
@@ -33,34 +39,37 @@ By default at the moment this is the basic pitch mapping, can try:
 Lets try some out...
 """
 
-windy = strauss.sonify(x, y, style='flute_section')
-windy.render()
-windy.hear()
-
-"""The strauss figure can then be closed for a fresh sonification."""
-
-strauss.close()
-
-"""The plan for mappings is to have these inputs in priority order, where the first (`x`) is always time, and subsequent arguments are in some 'priority' order. As with `matplotlib`, we can even have a single mapping, which assumes time (the "`x`") is uniformly spaced, and then maps the `y` parameter.
-
-Let's try some other styles, for example the default (either writing `style='default'` or specifying no style at all):
-"""
-
-windy = strauss.sonify(x, y, style='default')
-strauss.hear()
-strauss.close()
-
-"""Or other styles. Some styles pull resources from online, and store these in the cache, for example the `mallets`, which uses a directory of indivdual struck samples, and maps y onto a serious of harmonious notes:"""
-
-windy = strauss.sonify(x, y, style='mallets')
-strauss.hear()
-strauss.close()
-
-"""...or `flute_section`, which makes use of a _Soundfont_ file (`.sf2` extension), that contains audio samples of flutes. Here we hold a harmonious chord and the cutoff frequency changes the _timbre_ of the sound:"""
-
-windy = strauss.sonify(x, y, style='flute_section')
-strauss.hear()
-strauss.close()
+# windy = strauss.sonify(x, y, style='windy')
+# windy.render()
+# windy.hear()
+#
+# """The strauss figure can then be closed for a fresh sonification."""
+#
+# strauss.close()
+#
+# """The plan for mappings is to have these inputs in priority order, where the first (`x`) is always time, and subsequent arguments are in some 'priority' order. As with `matplotlib`, we can even have a single mapping, which assumes time (the "`x`") is uniformly spaced, and then maps the `y` parameter.
+#
+# Let's try some other styles, for example the default (either writing `style='default'` or specifying no style at all):
+# """
+#
+# basic = strauss.sonify(x, y, style='default')
+# basic.render()
+# basic.hear()
+# strauss.close()
+#
+# """Or other styles. Some styles pull resources from online, and store these in the cache, for example the `mallets`, which uses a directory of indivdual struck samples, and maps y onto a serious of harmonious notes:"""
+#
+# malletTime = strauss.sonify(x, y, style='mallets')
+# malletTime.render()
+# malletTime.hear()
+# strauss.close()
+#
+# """...or `flute_section`, which makes use of a _Soundfont_ file (`.sf2` extension), that contains audio samples of flutes. Here we hold a harmonious chord and the cutoff frequency changes the _timbre_ of the sound:"""
+#
+# flute = strauss.sonify(x, y, style='flute_section')
+# flute.render()
+# flute.hear()
+# strauss.close()
 
 """## Combining sonifications
 
@@ -71,21 +80,19 @@ Let's set this up so we use the default and `windy` styles together to represent
 
 strauss.sonify(x, y)
 strauss.sonify(x, -y, style='windy')
-strauss.hear()
+# strauss.save("combSon.wav")
 strauss.close()
 
 """Individual sonifications can be given names, and have volume levels set to allow tweaking of the different elements"""
 
 strauss.sonify(x, y, name='sin(x)', level='-20 db')
 strauss.sonify(x, -y, style='windy', name='-sin(x)', level='0 db')
-strauss.hear()
-
+# strauss.save("combSonVolSet.wav")
 """...and adjusted after the fact"""
 
 strauss.set_level('sin(x)', '0 dB')
 strauss.set_level('-sin(x)', '-10 dB')
-
-strauss.hear()
+# strauss.save("comSonVarVol.wav")
 strauss.close()
 
 """## Fixed Properties
@@ -95,12 +102,13 @@ We can also fix properties of our choice. This can be set inside the style file 
 
 strauss.sonify(x, y, name='sin(x)', fix_pan=0.3)
 strauss.sonify(x, -y, style='windy', name='-sin(x)', fix_pan=0.7)
-strauss.hear()
+# strauss.save("combSonPan2.wav")
 strauss.close()
 
 """Fixed values ae generally set using a ***fractional*** value (i.e. between 0 and 1), with the exception of 3D angles, `azimuth` and `polar` which expect values in degrees - from 0° to 360° and 0° to 180°, respectively:"""
 
 soni = strauss.sonify(x, -y, fix_azimuth=90, fix_polar=80)
+soni.render()
 soni.hear()
 strauss.close()
 
@@ -111,11 +119,11 @@ I can also save my audio figure to a sound file, when I'm happy. Either as a `.w
 
 strauss.sonify(x, y, name='sin(x)', level='-10 db')
 strauss.sonify(x, -y, style='windy', name='-sin(x)', level='0 db')
-strauss.save('my_sonification.wav')
+# strauss.save('my_sonification.wav')
 
 """Or using another common extension provided `ffmpeg` is available:"""
 
-strauss.save('my_sonification.mp3')
+# strauss.save('my_sonification.mp3')
 # strauss.save('my_sonification.aac')
 # strauss.save('my_sonification.ogg')
 
@@ -138,6 +146,7 @@ fs_style = strauss.get_style('flute_section', print_style=True)
 with open('test.yml', 'w') as f:
     f.write(fs_style)
 windy = strauss.sonify(x, y, style='test.yml')
+windy.render()
 windy.hear()
 strauss.close()
 
@@ -157,7 +166,7 @@ generator:
     loop_start: 0.1
     loop_end:  2.1
 
-sources: 'objects'
+sources: 'events'
 
 map:
   - output: 'time_evo'
@@ -172,5 +181,6 @@ notes: ['G2', 'D3', 'Bb3', 'F4', 'Bb4']
 with open('test.yml', 'w') as f:
     f.write(fs_style)
 windy = strauss.sonify(x, y, style='test.yml')
-windy.here()
+windy.render()
+windy.hear()
 strauss.close()

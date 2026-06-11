@@ -13,7 +13,10 @@ base_size = 7e3  # for scatter markers
 import numpy as np
 import matplotlib.pyplot as plt
 
+import matplotlib
+matplotlib.use("Tkagg", force=True)
 plt.style.use("dark_background")
+
 
 # --- Constants in SI units ---
 pi = np.pi
@@ -170,20 +173,20 @@ ani = animation.FuncAnimation(
 # If you are running this inside a Jupyter/IPython Notebook, uncomment the lines below
 # to embed the animation directly in the cell as an HTML5 video:
 #
-from IPython.display import HTML, Video
+# from IPython.display import HTML, Video
+#
+# display(HTML(ani.to_html5_video()))
+# plt.close()  # Prevents a duplicate static plot from rendering
 
-display(HTML(ani.to_html5_video()))
-plt.close()  # Prevents a duplicate static plot from rendering
-
-writer = animation.FFMpegWriter(
-    fps=fps,
-    metadata=dict(artist='Mock Binary System'),
-    bitrate=1800
-)
-
-print("Rendering video...")
-ani.save('silent_inspiral.mp4', writer=writer)
-print("Silent video saved as 'silent_inspiral.mp4'")
+# writer = animation.FFMpegWriter(
+#     fps=fps,
+#     metadata=dict(artist='Mock Binary System'),
+#     bitrate=1800
+# )
+#
+# print("Rendering video...")
+# ani.save('silent_inspiral.mp4', writer=writer)
+# print("Silent video saved as 'silent_inspiral.mp4'")
 
 # converts the phase into multiples (0.x, 1.x, 2.x, 3.x...)
 pi_multiples = np.floor(phase_vis / np.pi)
@@ -287,9 +290,9 @@ sources.apply_mapping_functions(map_lims=lims, param_lims=plims)
 system = "mono"
 soni = Sonification(score, sources, generator, system)
 soni.render()
-soni.notebook_display(show_waveform=False)
+soni.hear()
 # Output the audio
-soni.save('5th_chirp.wav')
+# soni.save('5th_chirp.wav')
 
 # Extra LFO layer
 
@@ -350,5 +353,5 @@ sources.apply_mapping_functions(map_lims=lims, param_lims=plims)
 system = "stereo"
 soni = Sonification(score, sources, generator, system)
 soni.render()
-soni.notebook_display(show_waveform=False)
-soni.save('windy_LFO_orbits_low.wav')
+soni.hear()
+# soni.save('windy_LFO_orbits_low.wav')
