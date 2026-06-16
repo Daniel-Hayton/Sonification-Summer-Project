@@ -11,7 +11,9 @@ base_size = 7e3  # for scatter markers
 # simulate (cribbed from [this example](https://labcit.ligo.caltech.edu/~ajw/ph4/InspiralExercise_IPythonNotebook.pdf
 # ))...
 import numpy as np
+import strauss
 import matplotlib.pyplot as plt
+import matplotlib.animation as animation
 
 import matplotlib
 matplotlib.use("Tkagg", force=True)
@@ -98,10 +100,6 @@ plt.ylabel('GW frequency, Hz')
 plt.title(stitl)
 plt.grid(True, which="both", ls="--")
 plt.show()
-
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.animation as animation
 
 # --- 1. Animation Settings ---
 fps = 30
@@ -229,84 +227,13 @@ log2_forb_ext = np.concatenate([log2_forb, [log2_forb[-1]] * (Next - 1)])
 h_ext = np.concatenate([1. / aorb, np.linspace(1 / aorb[0], 0, Next - 1)])
 
 # and sonify...
-
-import numpy as np
-from strauss.sonification import Sonification
-from strauss.sources import Objects
-from strauss.score import Score
-from strauss.generator import Synthesizer
-
-# Setup the Strauss Synthesizer
-generator = Synthesizer()
-generator.load_preset('pitch_mapper')
-
-# Modify the loaded preset to use a pure sine wave oscillator
-generator.modify_preset(
-    {'oscillators': {
-        'osc1': {
-            'form': 'sine',
-            'level': 1.,
-            'detune': 0.,
-            'phase': 0
-        }
-    },
-    }
-)
-
-# Define the Musical Score
-# We use 2 notes, and set the playback length.
-notes = [['F2', 'C3']]
-score = Score(notes, duration * (1 + ring_frac))
-
-# Map the Data to Sound Parameters
-# The Objects source class handles continuous time-series evolution.
-# The arrays are wrapped in lists because we are sonifying exactly one "object" (the binary system).
-data = {
-    'pitch': [0, 1],  # Base pitch multiplier
-    'time_evo': [t_ext] * 2,  # Time axis mapped across the audio length
-    'pitch_shift': [log2_forb_ext] * 2,  # Pitch shifts according to log2(orbital frequency)
-    'volume': [h_ext] * 2,  # Volume follows the orbital separation
-}
-
-# Define Mapping Limits
-# We map the data's percentiles to the synthesizer's parameter bounds.
-lims = {
-    'time_evo': ('0%', '100%'),
-    'pitch_shift': ('0%', '100%'),
-    'volume': ('0%', '100%')
-}
-
-plims = {
-    'pitch_shift': semitone_range,
-    'volume': (0.6, 1),
-}
-
-# Initialize Sources and Apply Mapping
-sources = Objects(data.keys())
-sources.fromdict(data)
-sources.apply_mapping_functions(map_lims=lims, param_lims=plims)
-
-# Render the Sonification
-system = "mono"
-soni = Sonification(score, sources, generator, system)
-soni.render()
-soni.hear()
-# Output the audio
-# soni.save('5th_chirp.wav')
-import strauss
-
-soni1p5 = strauss.sonify(t_ext, log2_forb, style="mergerA.yml")
-soni1p5.render()
-soni1p5.hear()
-strauss.close()
+if input("Do you want it to work? ") == "no":
+    soni = strauss.sonify(t_ext, log2_forb, style="mergerA.yml")
+    soni.render()
+    soni.hear()
+    strauss.close()
 
 # Extra LFO layer
-
-import numpy as np
-from strauss.sonification import Sonification
-from strauss.sources import Objects
-from strauss.score import Score
-from strauss.generator import Synthesizer
 
 # Create cutoff LFO data
 t = np.linspace(0, norm_times[-1], 2000)  # high resolution time array
@@ -325,39 +252,7 @@ plt.xlabel("Time")
 plt.ylabel("Amplitude")
 plt.show()
 
-generator = Synthesizer()
-generator.load_preset('windy')
-
-generator.modify_preset({'filter': 'on'})
-
-notes = [['F2']]
-score = Score(notes, duration * (1 + ring_frac))
-
-cutoff = (lfo + 1) / 2  # 0 → 1
-
-data = {
-    'pitch': [0],
-    'time_evo': [t],
-    'cutoff': [lfo],
-    # 'azimuth': [lfo],
-    # 'polar': [0.5]
-}
-
-lims = {
-    'time_evo': ('0%', '100%')
-}
-
-# 0.1 - 0.4 for the larger BH, 0.3 - 0.6 for the less massive
-plims = {
-    'cutoff': (0.1, 0.4),
-}
-
-sources = Objects(data.keys())
-sources.fromdict(data)
-sources.apply_mapping_functions(map_lims=lims, param_lims=plims)
-
-system = "stereo"
-soni = Sonification(score, sources, generator, system)
+soni = strauss.sonify(t, lfo, style="mergerB.yml")
 soni.render()
 soni.hear()
 # soni.save('windy_LFO_orbits_low.wav')

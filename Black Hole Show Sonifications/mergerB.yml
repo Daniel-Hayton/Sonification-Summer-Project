@@ -1,0 +1,23 @@
+name: 'mergerB'
+
+description: ''
+
+generator:
+  type: 'synthesizer'
+  preset: 'windy'
+  mods:
+    filter: 'on'
+
+sources: 'objects'
+
+map:
+
+  - input: 'time'
+    input_range: ['0%', '100%']
+    output: 'time_evo'
+
+  - input: 'cutoff'
+    input_range: ['10%', '40%']
+    output: 'cutoff'
+
+notes: ['F2']
