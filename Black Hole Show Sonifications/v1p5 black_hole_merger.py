@@ -90,7 +90,6 @@ plt.xlabel('time (s)')
 plt.ylabel('orbital separation (km)')
 plt.title(stitl)
 plt.grid(True, which="both", ls="--")
-plt.show()
 
 # 2. GW Frequency vs Time
 plt.figure(figsize=(8, 5))
@@ -99,7 +98,6 @@ plt.xlabel('time (s)')
 plt.ylabel('GW frequency, Hz')
 plt.title(stitl)
 plt.grid(True, which="both", ls="--")
-plt.show()
 
 # --- 1. Animation Settings ---
 fps = 30
@@ -227,11 +225,8 @@ log2_forb_ext = np.concatenate([log2_forb, [log2_forb[-1]] * (Next - 1)])
 h_ext = np.concatenate([1. / aorb, np.linspace(1 / aorb[0], 0, Next - 1)])
 
 # and sonify...
-soni = strauss.sonify(t_ext, log2_forb_ext, style="mergerA.yml")
-soni.render()
-soni.hear()
-strauss.close()
-
+strauss.sonify(t_ext, log2_forb_ext, h_ext, style="mergerA.yml", duration=(duration * (1 + ring_frac)), system='mono')
+# strauss.save("test.wav")
 # Extra LFO layer
 
 # Create cutoff LFO data
@@ -241,17 +236,20 @@ orbit_index = np.arange(len(norm_times))
 # interpolate fractional orbit count
 orbit_progress = np.interp(t, norm_times, orbit_index)
 
-phase = 1 * np.pi * orbit_progress  # Add pi to this to offset one of the BH orbits
-lfo = np.sin(phase)
+phases = (np.pi * orbit_progress, np.pi * (orbit_progress + 1))
+styles = ("mergerB1.yml", "mergerB2.yml")
+for i in range(0, 2):
+    phase = phases[i]
+    lfo = np.sin(phase)
+    strauss.sonify(t, lfo, style=styles[i], duration=(duration * (1 + ring_frac)), system="stereo")
 
 # plot it
+plt.figure()
 plt.plot(t, lfo)
 plt.title("Accelerating LFO")
 plt.xlabel("Time")
 plt.ylabel("Amplitude")
 plt.show()
 
-soni = strauss.sonify(t, lfo, style="mergerB.yml")
-soni.render()
-soni.hear()
-# soni.save('windy_LFO_orbits_low.wav')
+strauss.save("v1p5MergingBlackHoles.wav")
+strauss.close()

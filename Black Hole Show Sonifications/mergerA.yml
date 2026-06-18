@@ -20,6 +20,8 @@ map:
 
   - output: 'time_evo'
   - output: 'pitch_shift'
+  - output: 'volume'
+    output_range: [0.6, 1]
 
 notes: ['F2', 'C3']
 
