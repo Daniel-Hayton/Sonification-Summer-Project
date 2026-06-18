@@ -15,8 +15,8 @@ import strauss
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
-import matplotlib
-matplotlib.use("Tkagg", force=True)
+import matplotlib as mpl
+mpl.use("Tkagg", force=True)
 plt.style.use("dark_background")
 
 
@@ -227,11 +227,10 @@ log2_forb_ext = np.concatenate([log2_forb, [log2_forb[-1]] * (Next - 1)])
 h_ext = np.concatenate([1. / aorb, np.linspace(1 / aorb[0], 0, Next - 1)])
 
 # and sonify...
-if input("Do you want it to work? ") == "no":
-    soni = strauss.sonify(t_ext, log2_forb, style="mergerA.yml")
-    soni.render()
-    soni.hear()
-    strauss.close()
+soni = strauss.sonify(t_ext, log2_forb_ext, style="mergerA.yml")
+soni.render()
+soni.hear()
+strauss.close()
 
 # Extra LFO layer
 

@@ -368,5 +368,6 @@ sources.apply_mapping_functions(map_lims=lims)
 # render and play sonification!
 soni = Sonification(score, sources, generator, 'stereo')
 soni.render()
-soni.notebook_display(show_waveform=0)
+# soni.notebook_display(show_waveform=0)
+soni.hear()
 soni.save('spectrum_shift.wav')

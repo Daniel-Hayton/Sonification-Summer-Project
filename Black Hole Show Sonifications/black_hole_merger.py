@@ -1,5 +1,3 @@
-# Simple simulation
-
 # sim params
 mass_ratio = 3
 
@@ -8,15 +6,18 @@ duration = 15.0  # secs
 max_visual_hz = 70  # Hz - lower scales slower
 base_size = 7e3  # for scatter markers
 
-# simulate (cribbed from [this example](https://labcit.ligo.caltech.edu/~ajw/ph4/InspiralExercise_IPythonNotebook.pdf
-# ))...
+# simulate (cribbed from [this example](https://labcit.ligo.caltech.edu/~ajw/ph4/InspiralExercise_IPythonNotebook.pdf))...
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.animation as animation
+import matplotlib as mpl
+from strauss.sonification import Sonification
+from strauss.sources import Objects
+from strauss.score import Score
+from strauss.generator import Synthesizer
 
-import matplotlib
-matplotlib.use("Tkagg", force=True)
+mpl.use("Tkagg", force=True)
 plt.style.use("dark_background")
-
 
 # --- Constants in SI units ---
 pi = np.pi
@@ -99,10 +100,6 @@ plt.title(stitl)
 plt.grid(True, which="both", ls="--")
 plt.show()
 
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.animation as animation
-
 # --- 1. Animation Settings ---
 fps = 30
 duration = 20.0
@@ -174,10 +171,9 @@ ani = animation.FuncAnimation(
 # to embed the animation directly in the cell as an HTML5 video:
 #
 # from IPython.display import HTML, Video
-#
 # display(HTML(ani.to_html5_video()))
-# plt.close()  # Prevents a duplicate static plot from rendering
-
+# plt.close() # Prevents a duplicate static plot from rendering
+#
 # writer = animation.FFMpegWriter(
 #     fps=fps,
 #     metadata=dict(artist='Mock Binary System'),
@@ -187,6 +183,7 @@ ani = animation.FuncAnimation(
 # print("Rendering video...")
 # ani.save('silent_inspiral.mp4', writer=writer)
 # print("Silent video saved as 'silent_inspiral.mp4'")
+
 
 # converts the phase into multiples (0.x, 1.x, 2.x, 3.x...)
 pi_multiples = np.floor(phase_vis / np.pi)
@@ -230,11 +227,6 @@ h_ext = np.concatenate([1. / aorb, np.linspace(1 / aorb[0], 0, Next - 1)])
 
 # and sonify...
 
-import numpy as np
-from strauss.sonification import Sonification
-from strauss.sources import Objects
-from strauss.score import Score
-from strauss.generator import Synthesizer
 
 # Setup the Strauss Synthesizer
 generator = Synthesizer()
@@ -290,23 +282,12 @@ sources.apply_mapping_functions(map_lims=lims, param_lims=plims)
 system = "mono"
 soni = Sonification(score, sources, generator, system)
 soni.render()
-soni.hear()
+# soni.notebook_display(show_waveform=False)
 # Output the audio
 # soni.save('5th_chirp.wav')
-import strauss
-
-soni1p5 = strauss.sonify(t_ext, log2_forb, style="mergerA.yml")
-soni1p5.render()
-soni1p5.hear()
-strauss.close()
+soni.hear()
 
 # Extra LFO layer
-
-import numpy as np
-from strauss.sonification import Sonification
-from strauss.sources import Objects
-from strauss.score import Score
-from strauss.generator import Synthesizer
 
 # Create cutoff LFO data
 t = np.linspace(0, norm_times[-1], 2000)  # high resolution time array
@@ -359,5 +340,6 @@ sources.apply_mapping_functions(map_lims=lims, param_lims=plims)
 system = "stereo"
 soni = Sonification(score, sources, generator, system)
 soni.render()
-soni.hear()
+# soni.notebook_display(show_waveform=False)
 # soni.save('windy_LFO_orbits_low.wav')
+soni.hear()

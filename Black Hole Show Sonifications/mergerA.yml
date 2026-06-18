@@ -18,13 +18,8 @@ sources: 'objects'
 
 map:
 
-  - input: 'time'
-    input_range: ['0%', '100%']
-    output: 'time_evo'
-
-  - input: 'pitch'
-    input_range: ['0%', '100%']
-    output: 'pitch_shift'
+  - output: 'time_evo'
+  - output: 'pitch_shift'
 
 notes: ['F2', 'C3']
 

@@ -1,0 +1,31 @@
+name: 'clickStyle'
+
+description: ''
+
+generator:
+  type: 'synthesizer'
+  preset: "pitch_mapper"
+  mods:
+    filter: 'on'
+    note_length: 0.15
+    oscillators:
+      osc1:
+        form: 'sine'
+
+    volume_envelope:
+      use: 'on'
+      A: 0.001
+      D: 0.1
+      S: 0.
+      R: 0.05
+
+
+sources: 'events'
+
+map:
+  - output: 'time'
+
+  - output: 'pitch'
+
+notes: ['C4']
+
