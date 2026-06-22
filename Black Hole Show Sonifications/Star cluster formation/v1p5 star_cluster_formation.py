@@ -174,11 +174,21 @@ rescaled_x = (x_positions - np.min(x_positions)) / (np.max(x_positions) - np.min
 # Add slight pitch variation to make same notes sound slighly different
 pitch_jitter = np.random.normal(0, 0.01, len(x_positions))
 
-strauss.sonify(formation_times, current_star_formation_rate, current_star_formation_rate, rescaled_x, pitch_jitter,
-               duration=length, style='cluster1.yml', system="stereo")
+strauss.sonify(formation_times,
+               current_star_formation_rate,
+               current_star_formation_rate,
+               rescaled_x,
+               pitch_jitter,
+               duration=length,
+               style='cluster1.yml',
+               system="stereo")
+strauss.save("stars_forming v1p5.wav")
+strauss.close()
 
 # Cloud Synth
 strauss.sonify(time_array, cloud_collapse, duration=length, system="mono", style="cluster2.yml")
+strauss.save("gas_chord v1p5.wav")
+strauss.close()
 
 # Spectraliser for gas cloud collapse
 
@@ -248,7 +258,7 @@ plt.title('Generated Spectrum')
 # plt.show()
 
 # render and play sonification!
-strauss.sonify(spec_stack.T, [1], system="stereo", style="cluster3.yml", duration=length)
-
-strauss.save('v1p5StarClusterFormation.wav')
+strauss.sonify([spec_stack.T], [1], system="stereo", style="cluster3.yml", duration=length)
+strauss.save("spectrum_shift v1p5.wav")
+# strauss.save('v1p5 StarClusterFormation.wav')
 strauss.close()

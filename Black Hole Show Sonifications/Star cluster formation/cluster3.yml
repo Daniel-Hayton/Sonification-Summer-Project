@@ -10,9 +10,9 @@ generator:
     filter: 'on'
     min_freq: 40
     max_freq: 1000
-    regen_phases: True
+    regen_phases: 'True'
     interpolation_type: 'preserve_power'
-    equal_loudness_normalisation: False
+    equal_loudness_normalisation: 'False'
 
 
 map:
