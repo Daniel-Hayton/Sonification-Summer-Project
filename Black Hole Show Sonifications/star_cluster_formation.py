@@ -134,8 +134,9 @@ plt.show()
 
 # Generate Final Events Data for Sonification
 
-# Need to add a silent event at the begnning and end of the array for the event-based sonification (so the sonification goes from 0 seconds to the sonification length, and is not scaled to where only events exist). 
-# Set these to have zero SFR so can have zero volume.
+# Need to add a silent event at the begnning and end of the array for the event-based sonification (so the
+# sonification goes from 0 seconds to the sonification length, and is not scaled to where only events exist). Set
+# these to have zero SFR so can have zero volume.
 
 
 formation_times = np.hstack([0, np.array(formation_times), sonification_length])
