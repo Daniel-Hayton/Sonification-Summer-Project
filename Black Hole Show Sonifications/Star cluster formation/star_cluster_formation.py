@@ -178,7 +178,7 @@ with open(events_data_output_filename, mode='w', newline='') as csvfile:
 # 
 # **Volume** = current_star_formation_rate
 # 
-# **Azimuth (or Pan in STRAUSS V1.5)** = x_positions
+# **pan (or Pan in STRAUSS V1.5)** = x_positions
 
 # Stars Forming
 
@@ -192,7 +192,8 @@ notes = [['F2', 'G2', 'C3', 'D3', 'F3', 'G3', 'C4', 'D4', 'F4', 'G4', 'C5', 'D5'
 length = 20
 score = Score(notes, length)
 
-# Rescale azimuth input between 0-1 for correct behaviour in STRAUSS
+# Rescale
+# input between 0-1 for correct behaviour in STRAUSS
 rescaled_x = (x_positions - np.min(x_positions)) / (np.max(x_positions) - np.min(x_positions))
 
 # Add slight pitch variation to make same notes sound slighly different
@@ -203,8 +204,7 @@ data = {
     'time': formation_times,
     'pitch': current_star_formation_rate,
     'volume': current_star_formation_rate,
-    'azimuth': rescaled_x,
-    'polar': [0.5] * len(x_positions),
+    'pan': rescaled_x,
     'pitch_shift': pitch_jitter
 }
 
@@ -215,7 +215,7 @@ m_lims = {
 p_lims = {
     'time': (0, 1),
     'volume': (0.2, 1),
-    'azimuth': (0.25, 0.75),
+    'pan': (0.25, 0.75),
     'pitch_shift': (0, 1)
 }
 
