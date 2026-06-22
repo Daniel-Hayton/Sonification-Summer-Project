@@ -1,0 +1,23 @@
+name: 'sparky'
+
+description: ''
+
+sources: 'objects'
+
+generator:
+  type: 'synthesizer'
+  preset: 'pitch_mapper'
+  mods:
+    filter: 'on'
+    oscillators:
+      osc1:
+        form: 'square'
+        level: 1
+        detune: 0.7
+        lfo: 2
+
+map:
+  - output: 'time_evo'
+  - output: 'pitch_shift'
+
+notes: 'C4'
