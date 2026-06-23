@@ -1,4 +1,4 @@
-name: 'clickStyle'
+name: 'lowClick'
 
 description: ''
 
@@ -27,5 +27,5 @@ map:
 
   - output: 'pitch'
 
-notes: ['B2', 'C4']
+notes: ['B2']
 

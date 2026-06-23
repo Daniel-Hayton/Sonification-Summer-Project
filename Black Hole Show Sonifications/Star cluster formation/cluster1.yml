@@ -1,21 +1,22 @@
-name: 'cluster1'
+name: "cluster1"
 
-description: ''
+description: ""
 
-sources: 'events'
+sources: "events"
 
 generator:
-  type: 'sampler'
-  sample: './harp'
+  type: "sampler"
+  sample: "./Harp"
 
 map:
-  - output: 'time'
-    input_range: ['0%', '101%']
-  - output: 'pitch'
-  - output: 'volume'
+  - output: "time"
+    input_range: ["0%", "101%"]
+  - output: "pitch"
+  - output: "volume"
     output_range: [0.2, 1]
-  - output: 'pan'
-    output_range: [0.25, 0.75]
-  - output: 'pitch_shift'
+  - output: "pan"
+  - output: "pitch_shift"
+    input_range: [0, 1]
+    output_range: [0, 1]
 
-notes: ['F2', 'G2', 'C3', 'D3', 'F3', 'G3', 'C4', 'D4', 'F4', 'G4', 'C5', 'D5']
+notes: ["F2", "G2", "C3", "D3", "F3", "G3", "C4", "D4", "F4", "G4", "C5", "D5"]

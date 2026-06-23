@@ -1,0 +1,21 @@
+name: 'cluster1'
+
+description: ''
+
+sources: 'events'
+
+generator:
+  type: 'sampler'
+  sample: './harp'
+
+map:
+  - output: 'time'
+    input_range: ['0%', '101%']
+  - output: 'pitch'
+  - output: 'volume'
+    output_range: [0.2, 1]
+  - output: 'pan'
+    output_range: [0.25, 0.75]
+  - output: 'pitch_shift'
+
+notes: ['F2', 'G2', 'C3', 'D3', 'F3', 'G3', 'C4', 'D4', 'F4', 'G4', 'C5', 'D5']

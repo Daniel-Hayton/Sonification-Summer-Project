@@ -1,0 +1,18 @@
+name: 'metro'
+
+description: ''
+
+sources: 'events'
+
+generator:
+  type: 'sampler'
+  sample: 'Metronom.sf2'
+  mods:
+    filter: 'on'
+    max_notes_per_sec: 1
+
+map:
+  - output: 'time'
+  - output: 'pitch'
+
+notes: ['E5', 'F5']

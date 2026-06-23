@@ -182,13 +182,13 @@ strauss.sonify(formation_times,
                duration=length,
                style='cluster1.yml',
                system="stereo")
-strauss.save("stars_forming v1p5.wav")
-strauss.close()
+# strauss.save("stars_forming v1p5.wav")
+# strauss.close()
 
 # Cloud Synth
 strauss.sonify(time_array, cloud_collapse, duration=length, system="mono", style="cluster2.yml")
-strauss.save("gas_chord v1p5.wav")
-strauss.close()
+# strauss.save("gas_chord v1p5.wav")
+# strauss.close()
 
 # Spectraliser for gas cloud collapse
 
@@ -259,6 +259,6 @@ plt.title('Generated Spectrum')
 
 # render and play sonification!
 strauss.sonify([spec_stack.T], [1], system="stereo", style="cluster3.yml", duration=length)
-strauss.save("spectrum_shift v1p5.wav")
-# strauss.save('v1p5 StarClusterFormation.wav')
+# strauss.save("spectrum_shift v1p5.wav")
+strauss.save('v1p5 StarClusterFormation.wav')
 strauss.close()
