@@ -181,7 +181,8 @@ strauss.sonify(formation_times,
                pitch_jitter,
                duration=length,
                style='cluster1.yml',
-               system="stereo")
+               system="stereo",
+               level="20 db")
 # strauss.save("stars_forming v1p5.wav")
 # strauss.close()
 

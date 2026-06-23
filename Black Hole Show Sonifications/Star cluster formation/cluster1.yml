@@ -10,7 +10,7 @@ generator:
 
 map:
   - output: "time"
-    input_range: ["0%", "101%"]
+    input_range: ["0%", "100%"]
   - output: "pitch"
   - output: "volume"
     output_range: [0.2, 1]
