@@ -40,7 +40,9 @@ incs = incs[:-1] + np.diff(incs) * 0.5
 event_times = np.interp(incs, ycum, x)
 highTime = np.interp(incs, yCumHigh, x)
 
-soni1p5 = sts.sonify(event_times, np.ones(Nsamp), style='highClick.yml', duration=30)
+sampOnes = np.ones(Nsamp)
+
+soni1p5 = sts.sonify(event_times, sampOnes, style='highClick.yml', duration=30)
 soni1p5.render()
 # soni1p5.hear()
 sts.close()
@@ -49,36 +51,36 @@ timeSort = np.argsort(event_times)
 # event_times = event_times[timeSort]
 
 
-sts.sonify(event_times, np.ones(Nsamp), style="lowClick.yml", duration=30)
-sts.sonify(event_times, np.ones(Nsamp), style="highClick.yml", duration=30)
-# sts.save("test1.wav")
+sts.sonify(event_times, sampOnes, style="lowClick.yml", duration=30)
+sts.sonify(event_times, sampOnes, style="highClick.yml", duration=30)
+sts.save("test1.wav")
 sts.close()
 
 displacement = -0.15
-sts.sonify(event_times, np.ones(Nsamp), style="lowClick.yml", duration=30)
-sts.sonify(event_times + displacement, np.ones(Nsamp), style="highClick.yml", duration=30)
-sts.sonify(np.linspace(0, 30, len(event_times)), np.ones(Nsamp), style="metro.yml", duration=30)
+sts.sonify(event_times, sampOnes, style="lowClick.yml", duration=30)
+sts.sonify(event_times + displacement, sampOnes, style="highClick.yml", duration=30)
+sts.sonify(np.linspace(0, 30, len(event_times)), sampOnes, style="metro.yml", duration=30)
 sts.save("test2.wav")
 sts.close()
 
-sts.sonify(event_times[::2], np.ones(Nsamp)[::2], style="lowClick.yml", duration=30)
-sts.sonify(event_times[1::2], np.ones(Nsamp)[1::2], style="highClick.yml", duration=30)
-# sts.save("test3.wav")
+sts.sonify(event_times[::2], sampOnes[::2], style="lowClick.yml", duration=30)
+sts.sonify(event_times[1::2], sampOnes[1::2], style="highClick.yml", duration=30)
+sts.save("test3.wav")
 sts.close()
 
-sts.sonify(event_times, np.ones(Nsamp), style="lowClick.yml", duration=30)
-sts.sonify(highTime, np.ones(Nsamp), style="highClick.yml", duration=30)
+sts.sonify(event_times, sampOnes, style="lowClick.yml", duration=30)
+sts.sonify(highTime, sampOnes, style="highClick.yml", duration=30)
 sts.save("test4.wav")
 sts.close()
 
-x = np.linspace(0, 10, 9)*0.5
+x = np.linspace(0, 10, 9) * 0.5
 x2 = np.linspace(0, 10, 3)
 sts.sonify(x, np.ones(len(x)), style='lowClick.yml', duration=10, system='mono')
 sts.sonify(x2, np.ones(len(x2)), style='highClick.yml', duration=10, system='mono')
-# sts.save("test5.wav")
+sts.save("test5.wav")
 sts.close()
 
-length = 20
+length = 30
 x = np.linspace(0, 10, length)
 y = np.arange(length) % 2
 
@@ -89,4 +91,16 @@ sts.close()
 altPitch = np.arange(len(event_times)) % 2
 sts.sonify(event_times, altPitch, style="clickStyle.yml", duration=30, system='mono')
 sts.save("test7.wav")
+sts.close()
+
+afterTheEvent = event_times[:-1] + (np.diff(event_times) / 2)
+sts.sonify(event_times[:-1], np.ones(Nsamp - 1), style="lowClick.yml", duration=30, system='mono')
+sts.sonify(afterTheEvent, np.ones(Nsamp - 1), style='highClick.yml', duration=30, system='mono')
+sts.save("test8.wav")
+sts.close()
+
+sts.sonify(x, y, style="metro.yml", duration=length, system="stereo", level="-20 db")
+sts.sonify(event_times, sampOnes, style="lowClick.yml", duration=length, system="mono")
+sts.sonify(afterTheEvent, sampOnes[:-1], style="highClick.yml", system="mono", duration=length)
+sts.save("test9.wav")
 sts.close()

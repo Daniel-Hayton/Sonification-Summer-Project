@@ -2,7 +2,7 @@
 from scipy.optimize import curve_fit
 import numpy as np
 import matplotlib.pyplot as plt
-import strauss
+import strauss as sts
 from statsmodels.distributions.empirical_distribution import ECDF
 import csv
 import matplotlib as mpl
@@ -174,7 +174,7 @@ rescaled_x = (x_positions - np.min(x_positions)) / (np.max(x_positions) - np.min
 # Add slight pitch variation to make same notes sound slighly different
 pitch_jitter = np.random.normal(0, 0.01, len(x_positions))
 
-strauss.sonify(formation_times,
+sts.sonify(formation_times,
                current_star_formation_rate,
                current_star_formation_rate,
                rescaled_x,
@@ -187,7 +187,7 @@ strauss.sonify(formation_times,
 # strauss.close()
 
 # Cloud Synth
-strauss.sonify(time_array, cloud_collapse, duration=length, system="mono", style="cluster2.yml")
+sts.sonify(time_array, cloud_collapse, duration=length, system="mono", style="cluster2.yml")
 # strauss.save("gas_chord v1p5.wav")
 # strauss.close()
 
@@ -259,7 +259,7 @@ plt.title('Generated Spectrum')
 # plt.show()
 
 # render and play sonification!
-strauss.sonify([spec_stack.T], [1], system="stereo", style="cluster3.yml", duration=length)
+sts.sonify([spec_stack.T], [1], system="stereo", style="cluster3.yml", duration=length)
 # strauss.save("spectrum_shift v1p5.wav")
-strauss.save('v1p5 StarClusterFormation.wav')
-strauss.close()
+sts.save('v1p5 StarClusterFormation.wav')
+sts.close()
