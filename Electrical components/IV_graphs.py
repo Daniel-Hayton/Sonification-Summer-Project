@@ -33,7 +33,8 @@ def diode(V):
 
 # Repeated loop until user wants to stop program
 while True:
-    try:
+    # try:
+
         component = input("Which component would you like to hear? ").lower()
 
         # Terminates code
@@ -56,6 +57,15 @@ while True:
             case "diode":
                 current = diode(voltage)
 
+        # User chooses the style they would like to use
+        styleNo = int(input("In which way would you like to hear the graph"
+                               "\n1\tBased on a synthesizer\n2\tBased on a song\nEnter 1 or 2\n-> "))
+
+        if styleNo == 1:
+            soundStyle = "sparky"
+        else:
+            soundStyle = "electricSong"
+
         # Generating the figure
         plt.figure()
         plt.plot(voltage, current)
@@ -71,14 +81,14 @@ while True:
         soni = sts.sonify(voltage, current,
                           duration=20,
                           system="mono",
-                          style="sparky.yml")
+                          style=soundStyle+".yml")
         soni.render()
         soni.hear()
 
         # Close for next loop
         sts.close()
         plt.close()
-    except:
-        print("Oh no, sorry. Something went wrong try again.")
+    # except ValueError:
+    #     print("Oh no, sorry. Something went wrong try again.")
 
 print("Thanks for listening")

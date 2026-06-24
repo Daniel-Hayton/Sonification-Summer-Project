@@ -1,0 +1,15 @@
+name: 'electricSong'
+
+description: ''
+
+sources: 'objects'
+
+generator:
+  type: 'sampler'
+  sample: './shesElectricish.wav'
+
+map:
+  - output: 'time_evo'
+  - output: 'pitch_shift'
+
+notes: []
