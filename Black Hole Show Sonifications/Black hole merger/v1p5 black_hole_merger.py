@@ -11,7 +11,7 @@ base_size = 7e3  # for scatter markers
 # simulate (cribbed from [this example](https://labcit.ligo.caltech.edu/~ajw/ph4/InspiralExercise_IPythonNotebook.pdf
 # ))...
 import numpy as np
-import strauss
+import strauss as sts
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
@@ -225,8 +225,8 @@ log2_forb_ext = np.concatenate([log2_forb, [log2_forb[-1]] * (Next - 1)])
 h_ext = np.concatenate([1. / aorb, np.linspace(1 / aorb[0], 0, Next - 1)])
 
 # and sonify...
-strauss.sonify(t_ext, log2_forb_ext, h_ext, style="mergerA.yml", duration=(duration * (1 + ring_frac)), system='mono')
-# strauss.save("test.wav")
+sts.sonify(t_ext, log2_forb_ext, h_ext, style="mergerA.yml", duration=(duration * (1 + ring_frac)), system='mono')
+# sts.save("test.wav")
 # Extra LFO layer
 
 # Create cutoff LFO data
@@ -241,7 +241,7 @@ styles = ("mergerB1.yml", "mergerB2.yml")
 for i in range(0, 2):
     phase = phases[i]
     lfo = np.sin(phase)
-    strauss.sonify(t, lfo, style=styles[i], duration=(duration * (1 + ring_frac)), system="stereo")
+    sts.sonify(t, lfo, style=styles[i], duration=(duration * (1 + ring_frac)), system="stereo")
 
 # plot it
 plt.figure()
@@ -251,5 +251,5 @@ plt.xlabel("Time")
 plt.ylabel("Amplitude")
 plt.show()
 
-strauss.save("v1p5MergingBlackHoles.wav")
-strauss.close()
+sts.save("v1p5MergingBlackHoles.wav")
+sts.close()
