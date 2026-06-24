@@ -6,10 +6,10 @@ sources: 'objects'
 
 generator:
   type: 'sampler'
-  sample: './shesElectricish.wav'
+  sample: './Song'
 
 map:
   - output: 'time_evo'
   - output: 'pitch_shift'
 
-notes: []
+notes: 'E5'

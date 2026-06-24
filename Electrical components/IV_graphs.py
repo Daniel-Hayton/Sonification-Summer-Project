@@ -33,7 +33,7 @@ def diode(V):
 
 # Repeated loop until user wants to stop program
 while True:
-    # try:
+    try:
 
         component = input("Which component would you like to hear? ").lower()
 
@@ -88,7 +88,7 @@ while True:
         # Close for next loop
         sts.close()
         plt.close()
-    # except ValueError:
-    #     print("Oh no, sorry. Something went wrong try again.")
+    except ValueError:
+        print("Oh no, sorry. Something went wrong try again.")
 
 print("Thanks for listening")
