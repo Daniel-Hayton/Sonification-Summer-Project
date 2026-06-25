@@ -17,7 +17,7 @@ def lamp(V, R):
     alpha = 0.08  # Bend rate
     n = 1.5  # Bend shape
 
-    return V\
+    return V \
         / (R * (1 + alpha * np.abs(V) ** n))
 
 
@@ -44,7 +44,13 @@ while True:
         # Define the voltage range
         maxV = float(input("How high do you want the voltage to go? "))
         minV = float(input("How low would you like the voltage to start from? "))
-        voltage = np.linspace(minV, maxV, 100)
+
+        dataPoints = 1000
+        voltage = np.linspace(minV, maxV, dataPoints)
+
+        # Set up for volume manipulation
+        maskPoints = int(dataPoints * 0.2)
+        varRes = np.ones(dataPoints)
 
         # Calculating current from set up parameters
         match component:
@@ -54,17 +60,27 @@ while True:
             case "lamp":
                 resistance = float(input("How many Ohms (Ω) of cold resistance do you want? "))
                 current = lamp(voltage, resistance)
+
             case "diode":
                 current = diode(voltage)
 
         # User chooses the style they would like to use
         styleNo = int(input("In which way would you like to hear the graph"
-                               "\n1\tBased on a synthesizer\n2\tBased on a song\nEnter 1 or 2\n-> "))
+                            "\n1\tBased on a synthesizer\n2\tBased on a song\nEnter 1 or 2\n-> "))
 
         if styleNo == 1:
             soundStyle = "sparky"
-        else:
+
+            highResMask = current >= current[np.argsort(current)][-maskPoints]
+            varRes[highResMask] = np.arange(0, maskPoints) % 2
+        elif styleNo == 2:
             soundStyle = "electricSong"
+            varRes = current
+        else:
+            soundStyle = "pump"
+            highResMask = current < current[np.argsort(current)][-maskPoints]
+            varRes[highResMask] = np.arange(0, dataPoints - maskPoints) % 2
+
 
         # Generating the figure
         plt.figure()
@@ -78,10 +94,10 @@ while True:
         plt.show()
 
         # Sonification of the graph
-        soni = sts.sonify(voltage, current,
+        soni = sts.sonify(voltage, current, varRes,
                           duration=20,
                           system="mono",
-                          style=soundStyle+".yml")
+                          style=soundStyle + ".yml")
         soni.render()
         soni.hear()
 

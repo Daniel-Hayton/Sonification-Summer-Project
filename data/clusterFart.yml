@@ -1,0 +1,16 @@
+name: 'clusterFart'
+
+description: ''
+
+sources: 'events'
+
+generator:
+  type: 'sampler'
+  sample: '../../data/Fart_Soundfont.sf2'
+
+map:
+  - output: 'time'
+  - output: 'pitch'
+  - output: 'volume'
+
+notes: ["??", "??"]

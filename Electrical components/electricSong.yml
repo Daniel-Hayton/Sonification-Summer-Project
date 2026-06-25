@@ -5,11 +5,13 @@ description: ''
 sources: 'objects'
 
 generator:
+
   type: 'sampler'
   sample: './Song'
 
 map:
   - output: 'time_evo'
   - output: 'pitch_shift'
+  - output: 'volume'
 
 notes: 'E5'

@@ -30,7 +30,6 @@ y_max = 100  # maximum y location of formation
 x_position_width = 13  # width of distribution in x
 y_position_width = 13  # width of distribution in y
 
-
 # Plotting parameters
 mpl.rcParams['lines.linewidth'] = 2
 mpl.rcParams['lines.linestyle'] = '--'
@@ -75,7 +74,9 @@ for ii in range(n_bin_edges):
     time_bin_values[ii] = (formation_times_bin_edges[ii + 1] + formation_times_bin_edges[ii]) / 2
 mean_guess = (time_max - time_min) / 2.
 sigma_guess = time_width
-param_optimised, param_covariance_matrix = curve_fit(gauss, time_bin_values, formation_times_hist, p0=[max(formation_times_hist), mean_guess, sigma_guess], maxfev=5000)
+param_optimised, param_covariance_matrix = curve_fit(gauss, time_bin_values, formation_times_hist,
+                                                     p0=[max(formation_times_hist), mean_guess, sigma_guess],
+                                                     maxfev=5000)
 
 # Calculate star formation rate as a function of time
 formation_times_fit = gauss(time_array, *param_optimised)
@@ -175,14 +176,15 @@ rescaled_x = (x_positions - np.min(x_positions)) / (np.max(x_positions) - np.min
 pitch_jitter = np.random.normal(0, 0.01, len(x_positions))
 
 sts.sonify(formation_times,
-               current_star_formation_rate,
-               current_star_formation_rate,
-               rescaled_x,
-               pitch_jitter,
-               duration=length,
-               style='cluster1.yml',
-               system="stereo",
-               level="20 db")
+           current_star_formation_rate,
+           current_star_formation_rate,
+           rescaled_x,
+           pitch_jitter,
+           duration=length,
+           style='cluster1.yml',
+           system="stereo",
+           level="20 db")
+
 # strauss.save("stars_forming v1p5.wav")
 # strauss.close()
 
