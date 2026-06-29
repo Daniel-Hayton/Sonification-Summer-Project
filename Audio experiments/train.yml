@@ -1,0 +1,26 @@
+name: 'train'
+
+description: ''
+
+sources: 'events'
+
+generator:
+  type: 'synthesizer'
+  preset: 'pitch_mapper'
+  mods:
+    filer: 'on'
+    oscillators:
+      osc1:
+        form: 'noise'
+
+    volume_envelope:
+      use: 'on'
+      A: 0.08
+      D: 0.025
+      S: 0.025
+      R: 0.08
+map:
+  - output: 'time'
+  - output: 'pitch'
+
+notes: 'F2'

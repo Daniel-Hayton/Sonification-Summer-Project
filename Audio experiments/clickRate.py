@@ -53,58 +53,58 @@ timeSort = np.argsort(event_times)
 
 sts.sonify(event_times, sampOnes, style="lowClick.yml", duration=30)
 sts.sonify(event_times, sampOnes, style="highClick.yml", duration=30)
-sts.save("test1.wav")
+# sts.save("test1.wav")
 sts.close()
 
 displacement = -0.15
 sts.sonify(event_times, sampOnes, style="lowClick.yml", duration=30)
 sts.sonify(event_times + displacement, sampOnes, style="highClick.yml", duration=30)
 sts.sonify(np.linspace(0, 30, len(event_times)), sampOnes, style="metro.yml", duration=30)
-sts.save("test2.wav")
+# sts.save("test2.wav")
 sts.close()
 
 sts.sonify(event_times[::2], sampOnes[::2], style="lowClick.yml", duration=30)
 sts.sonify(event_times[1::2], sampOnes[1::2], style="highClick.yml", duration=30)
-sts.save("test3.wav")
+# sts.save("test3.wav")
 sts.close()
 
 sts.sonify(event_times, sampOnes, style="lowClick.yml", duration=30)
 sts.sonify(highTime, sampOnes, style="highClick.yml", duration=30)
-sts.save("test4.wav")
+# sts.save("test4.wav")
 sts.close()
 
 x = np.linspace(0, 10, 9) * 0.5
 x2 = np.linspace(0, 10, 3)
 sts.sonify(x, np.ones(len(x)), style='lowClick.yml', duration=10, system='mono')
 sts.sonify(x2, np.ones(len(x2)), style='highClick.yml', duration=10, system='mono')
-sts.save("test5.wav")
+# sts.save("test5.wav")
 sts.close()
 
 length = 30
-x = np.linspace(0, 10, length)
-y = np.arange(length) % 2
-
-sts.sonify(x, y, style='clickStyle.yml', duration=20)
-sts.save("test6.wav")
-sts.close()
+# x = np.linspace(0, 10, length)
+# y = np.arange(length) % 2
+#
+# sts.sonify(x, y, style='clickStyle.yml', duration=20)
+# # sts.save("test6.wav")
+# sts.close()
 
 altPitch = np.arange(len(event_times)) % 2
 sts.sonify(event_times, altPitch, style="clickStyle.yml", duration=30, system='mono')
-sts.save("test7.wav")
+# sts.save("test7.wav")
 sts.close()
 
 betweenTimes = np.diff(event_times)
 afterTheEvent = event_times[:-1] + (betweenTimes / 2)
 sts.sonify(event_times[:-1], np.ones(Nsamp - 1), style="lowClick.yml", duration=30, system='mono')
 sts.sonify(afterTheEvent, np.ones(Nsamp - 1), style='highClick.yml', duration=30, system='mono')
-sts.save("test8.wav")
+# sts.save("test8.wav")
 sts.close()
 
-sts.sonify(x, y, style="metro.yml", duration=length, system="stereo", level="-20 db")
-sts.sonify(event_times, sampOnes, style="lowClick.yml", duration=length, system="mono")
-sts.sonify(afterTheEvent, sampOnes[:-1], style="highClick.yml", system="mono", duration=length)
-sts.save("test9.wav")
-sts.close()
+# sts.sonify(x, y, style="metro.yml", duration=length, system="stereo", level="-20 db")
+# sts.sonify(event_times, sampOnes, style="lowClick.yml", duration=length, system="mono")
+# sts.sonify(afterTheEvent, sampOnes[:-1], style="highClick.yml", system="mono", duration=length)
+# # sts.save("test9.wav")
+# sts.close()
 
 nTempo = Nsamp - 1
 tempoOnes = np.ones(nTempo)
@@ -118,15 +118,74 @@ length = 30
 sts.sonify(base, tempoOnes, style="lowClick.yml", duration=length)
 sts.sonify(tempoHit, tempoOnes, style='highClick.yml', duration=length)
 # sts.sonify(event_times, sampOnes, style="highClick.yml", duration=length)
-sts.save("test10.wav")
+# sts.save("test10.wav")
 sts.close()
 
 
 sts.sonify(event_times, altPitch, style="metro.yml", duration=length)
-sts.save("test11.wav")
+# sts.save("test11.wav")
 sts.close()
 
 sts.sonify(base, np.zeros(len(base)), style="metro.yml", duration=length)
 sts.sonify(base + betweenTimes, np.ones(len(base)), style="metro.yml", duration=length)
-sts.save("test12.wav")
+# sts.save("test12.wav")
+sts.close()
+
+
+# Mapping a sine to frequency.
+def freqMap():
+    extfac = 1.05
+
+    # Using phase_vis, dt_anim, and num_frames from the previous animation script
+    cycles = np.floor(event_times / (2 * np.pi))
+
+    # Find the indices where the cycle count increases
+    trigger_indices = np.where(np.diff(cycles) > 0)[0]
+
+    # Convert those indices into exact timestamps (in seconds)
+    trigger_times = trigger_indices
+
+    norm_times =  (duration * extfac)
+
+    base_note = 'F2'
+    semitone_range = [0, 24]
+    ring_frac = 0.001
+
+    # Create cutoff LFO data
+    t = np.linspace(0, norm_times[-1], 2000)  # high resolution time array
+    orbit_index = np.arange(len(norm_times))
+
+    # interpolate fractional orbit count
+    orbit_progress = np.interp(t, norm_times, orbit_index)
+
+    phase = np.pi * orbit_progress
+    lfo = np.sin(phase)
+    sts.sonify(t, lfo, style="train.yml", duration=(duration * (1 + ring_frac)), system="stereo")
+
+
+sts.sonify(event_times, sampOnes, style="train.yml", duration=length)
+
+secondDiff = np.diff(betweenTimes)
+diffLen = len(secondDiff)
+
+localMaxMask = secondDiff < 0
+
+for i in range(diffLen):
+    if localMaxMask[i] and localMaxMask[i+1]:
+        localMaxMask[i] = False
+
+
+localMaxPos = np.zeros(diffLen)
+localMaxs = localMaxPos[localMaxMask]
+numMax = len(localMaxs)
+localMaxPos[localMaxMask] = np.ones(numMax)
+
+offSet = Nsamp - diffLen
+for i in range(offSet):
+    localMaxPos = np.append(localMaxPos, [0])
+
+
+sts.sonify(event_times, sampOnes, localMaxPos, style="railway.yml", duration=length)
+
+sts.save("test13.wav")
 sts.close()
