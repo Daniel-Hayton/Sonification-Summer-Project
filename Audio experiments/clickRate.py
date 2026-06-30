@@ -11,7 +11,8 @@ x = np.linspace(0, 1, N)
 y = 2 ** (np.sin(x * 8 * np.pi) * 3)
 # y = x
 # y = 1-np.log(x+0.1)
-
+# y = x**3
+# y = np.sin(x)
 
 # and plot...
 plt.plot(x, y)
@@ -85,7 +86,7 @@ length = 30
 # y = np.arange(length) % 2
 #
 # sts.sonify(x, y, style='clickStyle.yml', duration=20)
-# # sts.save("test6.wav")
+# sts.save("test6.wav")
 # sts.close()
 
 altPitch = np.arange(len(event_times)) % 2
@@ -101,10 +102,10 @@ sts.sonify(afterTheEvent, np.ones(Nsamp - 1), style='highClick.yml', duration=30
 sts.close()
 
 # sts.sonify(x, y, style="metro.yml", duration=length, system="stereo", level="-20 db")
-# sts.sonify(event_times, sampOnes, style="lowClick.yml", duration=length, system="mono")
-# sts.sonify(afterTheEvent, sampOnes[:-1], style="highClick.yml", system="mono", duration=length)
-# # sts.save("test9.wav")
-# sts.close()
+sts.sonify(event_times, sampOnes, style="lowClick.yml", duration=length, system="mono")
+sts.sonify(afterTheEvent, sampOnes[:-1], style="highClick.yml", system="mono", duration=length)
+# sts.save("test9.wav")
+sts.close()
 
 nTempo = Nsamp - 1
 tempoOnes = np.ones(nTempo)
@@ -169,23 +170,35 @@ secondDiff = np.diff(betweenTimes)
 diffLen = len(secondDiff)
 
 localMaxMask = secondDiff < 0
-
-for i in range(diffLen):
-    if localMaxMask[i] and localMaxMask[i+1]:
+localMinMask = secondDiff > 0
+print(localMinMask)
+for i in range(diffLen - 1):
+    if localMaxMask[i] == localMaxMask[i+1]:
         localMaxMask[i] = False
 
+    if localMinMask[i] == localMinMask[i+1]:
+        localMinMask[i] = False
 
 localMaxPos = np.zeros(diffLen)
+localMinPos = np.zeros(diffLen)
+
 localMaxs = localMaxPos[localMaxMask]
+localMins = localMinPos[localMinMask]
+
 numMax = len(localMaxs)
+numMin = len(localMins)
+
 localMaxPos[localMaxMask] = np.ones(numMax)
+localMinPos[localMinMask] = np.ones(numMin)
 
 offSet = Nsamp - diffLen
 for i in range(offSet):
     localMaxPos = np.append(localMaxPos, [0])
+    localMinPos = np.append(localMinPos, [0])
 
 
-sts.sonify(event_times, sampOnes, localMaxPos, style="railway.yml", duration=length)
+sts.sonify(event_times, sampOnes, localMaxPos, style="whistle2.yml", duration=length)
+sts.sonify(event_times, sampOnes, localMinPos, style="whistle1.yml", duration=length)
 
 sts.save("test13.wav")
 sts.close()

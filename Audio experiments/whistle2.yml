@@ -1,0 +1,16 @@
+name: 'whistle2'
+
+description: ''
+
+sources: 'events'
+
+generator:
+  type: 'sampler'
+  sample: './lineSide'
+
+map:
+  - output: 'time'
+  - output: 'pitch'
+  - output: 'volume'
+
+notes: ['B1']

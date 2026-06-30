@@ -13,15 +13,42 @@ fps = 60
 timer = pg.time.Clock()
 
 # Initialising variables needed for plotting
-timeRange = 60
+timeRange = 120
 timeCounter = 0
 indexCounter = 0
-A = 5
+m = 1e5  # kg
 dataPoints = 100
 v = np.zeros(dataPoints)
 
-# Calculates how long a sonification will be
-soniLength = 30
+# Initialising forces
+drivingForce = 0
+resistiveForce = 0
+netForce = 0
+
+# Storing the constant colours that will be used
+BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
+
+# Sonification parameters
+soniLength = 60
+
+
+def displayForces(forces):
+    forceNames = ["Driving Force:", "Resistive Force:", "Net Force:"]
+
+    for i in range(0, 3):
+        # Making the force ready for display
+        forceInfo = forceNames[i]+" "+str(forces[i])+"N"
+
+        # Rendering and displaying the text
+        forceText = forceFont.render(forceInfo, True, WHITE)
+        textX = (SCREEN.get_width() // 2) - (forceText.get_width() // 4)
+        textY = (SCREEN.get_height() // 4) + i*60
+        SCREEN.blit(forceText, (textX, textY))
+
+
+# Initialise fonts for display
+forceFont = pg.font.Font(None, 70)
 
 # Setting up the screen with its constant background name and size and hides the mouse
 info = pg.display.Info()
@@ -31,16 +58,16 @@ pg.mouse.set_visible(False)
 
 
 # Function that holds the physical relation between the forces, time and velocity
-def vtFunc(time, A):
-    return A * np.sin(time)
+def vtFunc(t, u, F):
+    a = F / m
+    return a * t + u
 
 
 # Generates and plays the sound adapted to input
-def liveSound(A, time):
-
+def liveSound(time, v, netForce):
     # Calculating the new behaviour based on the new parameters
     projectedTime = np.linspace(time, time + timeRange, dataPoints)
-    projectedVel = vtFunc(A, projectedTime)
+    projectedVel = vtFunc(projectedTime, v[-1], netForce)
 
     # first get the simple integral by just using a cumulative sum
     displacement = np.cumsum(projectedVel)
@@ -60,11 +87,11 @@ def liveSound(A, time):
     secondDiff = np.diff(np.diff(projectedTime))
     diffLen = len(secondDiff)
 
-    # Mask to find positve and negative gradient
+    # Mask to find positive and negative gradient
     localMaxMask = secondDiff < 0
 
     # Loop so that only the point where the sign of the gradient changes is selected
-    for i in range(diffLen):
+    for i in range(diffLen - 1):
         if localMaxMask[i] and localMaxMask[i + 1]:
             localMaxMask[i] = False
 
@@ -79,7 +106,7 @@ def liveSound(A, time):
         localMaxPos = np.append(localMaxPos, [0])
 
     # Generates the sonification for the local maximums
-    sts.sonify(event_times, np.ones(dataPoints), localMaxPos, style="railway.yml", duration=soniLength)
+    # sts.sonify(event_times, np.ones(dataPoints), localMaxPos, style="railway.yml", duration=soniLength)
 
     # Saves the sonification and closes STRAUSS
     sts.save("vtSound.wav")
@@ -87,21 +114,24 @@ def liveSound(A, time):
 
     # Loads and plays the sonification using the pygame mixer
     pg.mixer.music.load("vtSound.wav")
-    pg.mixer.music.play()
+    pg.mixer.music.play(-1)  # Loops sound continuously
+
 
 running = True
 while running:
+
+    # Refresh the screen
     timer.tick(fps)
+    SCREEN.fill(BLACK)
 
     if indexCounter < dataPoints:
-        v[indexCounter] = vtFunc(timeCounter, A)
+        v[indexCounter] = vtFunc(timeCounter, v[indexCounter - 1], netForce)
         indexCounter += 1
         t = np.linspace(timeCounter, timeCounter + timeRange, dataPoints)
     else:
         v = np.roll(v, -1)
-        v[-1] = vtFunc(timeCounter, A)
+        v[-1] = vtFunc(timeCounter, v[-2], netForce)
         t = np.linspace(timeCounter - timeRange, timeCounter, dataPoints)
-
 
     # Generating and saving the figure
     plt.figure()
@@ -126,14 +156,29 @@ while running:
             sys.exit()
         if event.type == pg.KEYDOWN:
             if event.key == pg.K_UP:
-                A += 1
+                drivingForce += 10
             elif event.key == pg.K_DOWN:
-                A -= 1
+                drivingForce -= 10
+            elif event.key == pg.K_LEFT:
+                if resistiveForce > 0:
+                    resistiveForce -= 10
+                else:
+                    resistiveForce = 0
+            elif event.key == pg.K_RIGHT:
+                resistiveForce += 10
+
+            # Update net force
+            if drivingForce - resistiveForce > 0:
+                netForce = drivingForce - resistiveForce
+            else:
+                v[-1] = 0
 
             # Regenerates the sound when a key is pressed
-            liveSound(A, timeCounter)
+            liveSound(timeCounter, v, netForce)
+
+    # Display the forces acting on the graph
+    displayForces([drivingForce, resistiveForce, netForce])
 
     # Update screen and increment counter
     pg.display.update()
-    timeCounter += 1 / 15
-
+    timeCounter += 1 / fps
