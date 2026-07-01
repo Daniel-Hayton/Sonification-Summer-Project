@@ -15,6 +15,7 @@ timer = pg.time.Clock()
 # Initialising variables needed for plotting
 timeRange = 120
 timeCounter = 0
+timeInc = 1 / fps
 indexCounter = 0
 m = 1e5  # kg
 dataPoints = 100
@@ -24,6 +25,7 @@ v = np.zeros(dataPoints)
 drivingForce = 0
 resistiveForce = 0
 netForce = 0
+regionSign = 1
 
 # Storing the constant colours that will be used
 BLACK = (0, 0, 0)
@@ -34,16 +36,22 @@ soniLength = 60
 
 
 def displayForces(forces):
-    forceNames = ["Driving Force:", "Resistive Force:", "Net Force:"]
+    forceNames = ["Driving Force", "Resistive Force", "Net Force"]
 
-    for i in range(0, 3):
-        # Making the force ready for display
-        forceInfo = forceNames[i]+" "+str(forces[i])+"N"
+    for i in range(0, len(forces)):
+        # Making the force ready for display with directional arrows
+        arrow = ""
+        if forces[i] > 0:
+            arrow = "->"
+        elif forces[i] < 0:
+            arrow = "<-"
+
+        forceInfo = forceNames[i] + ": " + str(forces[i]) + "N " + arrow
 
         # Rendering and displaying the text
         forceText = forceFont.render(forceInfo, True, WHITE)
         textX = (SCREEN.get_width() // 2) - (forceText.get_width() // 4)
-        textY = (SCREEN.get_height() // 4) + i*60
+        textY = (SCREEN.get_height() // 4) + i * 60
         SCREEN.blit(forceText, (textX, textY))
 
 
@@ -125,20 +133,36 @@ while running:
     SCREEN.fill(BLACK)
 
     if indexCounter < dataPoints:
-        v[indexCounter] = vtFunc(timeCounter, v[indexCounter - 1], netForce)
+        v[indexCounter] = vtFunc(timeInc, v[indexCounter - 1], netForce)
         indexCounter += 1
         t = np.linspace(timeCounter, timeCounter + timeRange, dataPoints)
     else:
         v = np.roll(v, -1)
-        v[-1] = vtFunc(timeCounter, v[-2], netForce)
+        v[-1] = vtFunc(timeInc, v[-2], netForce)
         t = np.linspace(timeCounter - timeRange, timeCounter, dataPoints)
 
-    # Generating and saving the figure
+    # Makes sure the resistive force behaves physically
+    if abs(resistiveForce) > abs(drivingForce) and v[-2] <= 0:
+        v[-1] = 0
+
+    # Generating and plotting the figure
     plt.figure()
     plt.plot(t, v, color="white", marker=".")
+
+    # Determine the range of y based on sign of values
+    if np.min(v) < 0 < np.max(v):
+        plt.ylim(-50, 50)
+    elif np.min(v) < 0:
+        plt.ylim(-50, 0)
+    else:
+        plt.ylim(0, 50)
+
+    # Adding Labels to the figure
     plt.xlabel("time, t (s)")
     plt.ylabel("velocity, v (m/s)")
     plt.grid(color='grey')
+
+    # Save the figure to be displayed and close pyplot for next loop
     plt.savefig("vtFig.png")
     plt.close()
 
@@ -146,6 +170,12 @@ while running:
     fig = pg.image.load("./vtFig.png")
     figPos = (0, 0)
     SCREEN.blit(fig, figPos)
+
+    # Determining the current region the graph is in
+    if v[-1] >= 0:
+        regionSign = 1
+    elif v[-1] < 0:
+        regionSign = -1
 
     # Checks for and handles events in the event queue
     for event in pg.event.get():
@@ -160,25 +190,28 @@ while running:
             elif event.key == pg.K_DOWN:
                 drivingForce -= 10
             elif event.key == pg.K_LEFT:
-                if resistiveForce > 0:
-                    resistiveForce -= 10
-                else:
+                if (regionSign * resistiveForce) > 0:
                     resistiveForce = 0
+                else:
+                    resistiveForce += 10
             elif event.key == pg.K_RIGHT:
-                resistiveForce += 10
+                resistiveForce -= 10
+            elif event.key == pg.K_r:
+                drivingForce = 0
+                resistiveForce = 0
 
-            # Update net force
-            if drivingForce - resistiveForce > 0:
-                netForce = drivingForce - resistiveForce
-            else:
-                v[-1] = 0
+            # Used to check old net force against this loops net force
+            newNet = drivingForce + resistiveForce
 
-            # Regenerates the sound when a key is pressed
-            liveSound(timeCounter, v, netForce)
+            # Regenerates the sound when a the net force changes
+            if newNet != netForce:
+                netForce = newNet
+                if drivingForce != 0 and resistiveForce != 0:
+                    liveSound(timeCounter, v, netForce)
 
     # Display the forces acting on the graph
     displayForces([drivingForce, resistiveForce, netForce])
 
     # Update screen and increment counter
     pg.display.update()
-    timeCounter += 1 / fps
+    timeCounter += timeInc
