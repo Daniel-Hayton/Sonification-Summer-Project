@@ -3,57 +3,45 @@ import strauss as sts
 import numpy as np
 import pygame as pg
 from matplotlib import pyplot as plt
+from gtts import gTTS
+from time import sleep
 
 # Presets for graphing and initialising modules
 plt.style.use("dark_background")
 pg.init()
+
+# Initialising sound tools
+pg.mixer.init()
+channel = pg.mixer.Channel(1)
+vtSoni = pg.mixer.Sound("vtSound.wav")
+soniLength = 6
 
 # setting the frequency of the running loop
 fps = 60
 timer = pg.time.Clock()
 
 # Initialising variables needed for plotting
-timeRange = 120
+timeRange = 6000
 timeCounter = 0
-timeInc = 1 / fps
+timeInc = 10 / fps
 indexCounter = 0
 m = 1e5  # kg
-dataPoints = 100
+forceInc = 10000  # N
+dataPoints = 500
 v = np.zeros(dataPoints)
 
 # Initialising forces
 drivingForce = 0
-resistiveForce = 0
+breakForce = 0
 netForce = 0
-regionSign = 1
 
 # Storing the constant colours that will be used
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 
-# Sonification parameters
-soniLength = 60
-
-
-def displayForces(forces):
-    forceNames = ["Driving Force", "Resistive Force", "Net Force"]
-
-    for i in range(0, len(forces)):
-        # Making the force ready for display with directional arrows
-        arrow = ""
-        if forces[i] > 0:
-            arrow = "->"
-        elif forces[i] < 0:
-            arrow = "<-"
-
-        forceInfo = forceNames[i] + ": " + str(forces[i]) + "N " + arrow
-
-        # Rendering and displaying the text
-        forceText = forceFont.render(forceInfo, True, WHITE)
-        textX = (SCREEN.get_width() // 2) - (forceText.get_width() // 4)
-        textY = (SCREEN.get_height() // 4) + i * 60
-        SCREEN.blit(forceText, (textX, textY))
-
+# Global boolean variables
+internetWasConnected = True
+wasPlaying = False
 
 # Initialise fonts for display
 forceFont = pg.font.Font(None, 70)
@@ -73,6 +61,9 @@ def vtFunc(t, u, F):
 
 # Generates and plays the sound adapted to input
 def liveSound(time, v, netForce):
+    global wasPlaying
+    global vtSoni
+
     # Calculating the new behaviour based on the new parameters
     projectedTime = np.linspace(time, time + timeRange, dataPoints)
     projectedVel = vtFunc(projectedTime, v[-1], netForce)
@@ -120,9 +111,61 @@ def liveSound(time, v, netForce):
     sts.save("vtSound.wav")
     sts.close()
 
-    # Loads and plays the sonification using the pygame mixer
-    pg.mixer.music.load("vtSound.wav")
-    pg.mixer.music.play(-1)  # Loops sound continuously
+    # Loads and plays the sonification using pygame sound objects
+    vtSoni = pg.mixer.Sound("vtSound.wav")
+    channel.play(vtSoni, loops=-1)  # Loops sound continuously
+    wasPlaying = True
+
+
+# A procedure which takes string input and uses gtts to generate and play the string as spoken content
+def speak(text):
+    global internetWasConnected
+    global wasPlaying
+    global vtSoni
+
+    # Generates speech if there is an internet connection or plays an error message
+    try:
+        # Generates speech using gtts
+        speech = gTTS(text=text.lower(), lang="en", slow=False)
+        speech.save("currentItem.mp3")
+
+        # Loads and plays speech with pygame mixer
+        speech = pg.mixer.Sound("currentItem.mp3")
+        internetWasConnected = True
+
+    except:
+        if internetWasConnected:
+            # Play error message using pygame mixer
+            speech = pg.mixer.Sound("noInternet.mp3")
+            internetWasConnected = False
+
+    channel.play(speech)
+
+    # Restarts the sonification after the speech if it was on
+    if wasPlaying:
+        sleep(speech.get_length())
+        channel.play(vtSoni, loops=-1)  # Loops sound continuously
+
+
+# Presents all the forces on the right of the figure
+def displayForces(forces):
+    forceNames = ["Driving Force", "Break Force", "Net Force"]
+
+    for i in range(0, len(forces)):
+        # Making the force ready for display with directional arrows
+        arrow = ""
+        if forces[i] > 0:
+            arrow = "->"
+        elif forces[i] < 0:
+            arrow = "<-"
+
+        forceInfo = forceNames[i] + ": " + str(forces[i] / 1000) + "kN " + arrow
+
+        # Rendering and displaying the text
+        forceText = forceFont.render(forceInfo, True, WHITE)
+        textX = (SCREEN.get_width() // 2) - (forceText.get_width() // 4)
+        textY = (SCREEN.get_height() // 4) + i * 60
+        SCREEN.blit(forceText, (textX, textY))
 
 
 running = True
@@ -141,13 +184,13 @@ while running:
         v[-1] = vtFunc(timeInc, v[-2], netForce)
         t = np.linspace(timeCounter - timeRange, timeCounter, dataPoints)
 
-    # Makes sure the resistive force behaves physically
-    if abs(resistiveForce) > abs(drivingForce) and v[-2] <= 0:
+    # Makes sure the break force behaves physically
+    if abs(breakForce) > abs(drivingForce) and v[-2] <= 0:
         v[-1] = 0
 
     # Generating and plotting the figure
     plt.figure()
-    plt.plot(t, v, color="white", marker=".")
+    plt.plot(t, v, color="white", marker=".", linestyle="none")
 
     # Determine the range of y based on sign of values
     if np.min(v) < 0 < np.max(v):
@@ -171,12 +214,6 @@ while running:
     figPos = (0, 0)
     SCREEN.blit(fig, figPos)
 
-    # Determining the current region the graph is in
-    if v[-1] >= 0:
-        regionSign = 1
-    elif v[-1] < 0:
-        regionSign = -1
-
     # Checks for and handles events in the event queue
     for event in pg.event.get():
         # Quits the game when the window is closed
@@ -186,31 +223,48 @@ while running:
             sys.exit()
         if event.type == pg.KEYDOWN:
             if event.key == pg.K_UP:
-                drivingForce += 10
+                drivingForce += forceInc
             elif event.key == pg.K_DOWN:
-                drivingForce -= 10
+                drivingForce -= forceInc
             elif event.key == pg.K_LEFT:
-                if (regionSign * resistiveForce) > 0:
-                    resistiveForce = 0
+                if abs(breakForce) <= 0:
+                    breakForce = 0
                 else:
-                    resistiveForce += 10
+                    breakForce = int(abs(breakForce) - forceInc)
             elif event.key == pg.K_RIGHT:
-                resistiveForce -= 10
+                breakForce = int(abs(breakForce) + forceInc)
             elif event.key == pg.K_r:
                 drivingForce = 0
-                resistiveForce = 0
+                breakForce = 0
+            elif event.key == pg.K_s:
+                message = "Driving force " + str(drivingForce) + " Newtons. Break force " + str(breakForce) \
+                          + " Newtons. Net force " + str(netForce) + " Newtons."
+                speak(message)
+            elif event.key == pg.K_d:
+                speak("Driving force " + str(drivingForce) + " Newtons.")
+            elif event.key == pg.K_b:
+                speak("Break force " + str(breakForce) + "Newtons.")
+            elif event.key == pg.K_n:
+                speak("Net force " + str(netForce) + " Newtons.")
+
+            if drivingForce != 0:
+                breakForce = int(
+                    abs(breakForce) * -(drivingForce / abs(drivingForce)))  # ensures opposition to the driving force
 
             # Used to check old net force against this loops net force
-            newNet = drivingForce + resistiveForce
+            newNet = drivingForce + breakForce
+
+            if drivingForce == 0 and np.sign(v[-1]) == np.sign(breakForce):
+                newNet = 0
 
             # Regenerates the sound when a the net force changes
             if newNet != netForce:
                 netForce = newNet
-                if drivingForce != 0 and resistiveForce != 0:
+                if drivingForce != 0 or breakForce != 0:
                     liveSound(timeCounter, v, netForce)
 
     # Display the forces acting on the graph
-    displayForces([drivingForce, resistiveForce, netForce])
+    displayForces([drivingForce, breakForce, netForce])
 
     # Update screen and increment counter
     pg.display.update()
