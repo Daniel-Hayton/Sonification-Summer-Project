@@ -14,20 +14,26 @@ pg.init()
 pg.mixer.init()
 channel = pg.mixer.Channel(1)
 vtSoni = pg.mixer.Sound("vtSound.wav")
-soniLength = 6
 
 # setting the frequency of the running loop
 fps = 60
 timer = pg.time.Clock()
 
-# Initialising variables needed for plotting
-timeRange = 6000
-timeCounter = 0
-timeInc = 10 / fps
+# Indexing parameters
+dataPoints = 500
 indexCounter = 0
+lim = 1e-3
+
+# Initialising time variables
+playBackSpeed = 1
+timeRange = 60 * playBackSpeed
+timeCounter = 0
+timeInc = playBackSpeed * (timeRange / dataPoints)
+soniLength = 60 / playBackSpeed
+
+# Physical properties presets
 m = 1e5  # kg
 forceInc = 10000  # N
-dataPoints = 500
 v = np.zeros(dataPoints)
 
 # Initialising forces
@@ -159,12 +165,13 @@ def displayForces(forces):
         elif forces[i] < 0:
             arrow = "<-"
 
-        forceInfo = forceNames[i] + ": " + str(forces[i] / 1000) + "kN " + arrow
+        displayForce = int(forces[i] / 1000)
+        forceInfo = forceNames[i] + ": " + str(displayForce) + " kN " + arrow
 
         # Rendering and displaying the text
         forceText = forceFont.render(forceInfo, True, WHITE)
         textX = (SCREEN.get_width() // 2) - (forceText.get_width() // 4)
-        textY = (SCREEN.get_height() // 4) + i * 60
+        textY = (SCREEN.get_height() // 4) + (i * (forceText.get_height() + 20))
         SCREEN.blit(forceText, (textX, textY))
 
 
@@ -178,15 +185,28 @@ while running:
     if indexCounter < dataPoints:
         v[indexCounter] = vtFunc(timeInc, v[indexCounter - 1], netForce)
         indexCounter += 1
-        t = np.linspace(timeCounter, timeCounter + timeRange, dataPoints)
+        t = np.linspace(0, timeInc * dataPoints, dataPoints)
     else:
         v = np.roll(v, -1)
         v[-1] = vtFunc(timeInc, v[-2], netForce)
-        t = np.linspace(timeCounter - timeRange, timeCounter, dataPoints)
+        t = np.linspace(timeCounter, timeCounter + timeRange, dataPoints)
+
+    # Used to check old net force against this loops net force
+    newNet = drivingForce + breakForce
 
     # Makes sure the break force behaves physically
-    if abs(breakForce) > abs(drivingForce) and v[-2] <= 0:
-        v[-1] = 0
+    if abs(breakForce) > abs(drivingForce):
+        if np.sign(v[-2]) != np.sign(v[-1]):
+            v[-1] = 0
+
+        if abs(v[-1]) <= lim:
+            newNet = 0
+
+    # Regenerates the sound when a the net force changes
+    if newNet != netForce:
+        netForce = newNet
+        if netForce != 0:
+            liveSound(timeCounter, v, netForce)
 
     # Generating and plotting the figure
     plt.figure()
@@ -213,6 +233,9 @@ while running:
     fig = pg.image.load("./vtFig.png")
     figPos = (0, 0)
     SCREEN.blit(fig, figPos)
+
+    # Display the forces acting on the graph
+    displayForces([drivingForce, breakForce, netForce])
 
     # Checks for and handles events in the event queue
     for event in pg.event.get():
@@ -246,25 +269,18 @@ while running:
                 speak("Break force " + str(breakForce) + "Newtons.")
             elif event.key == pg.K_n:
                 speak("Net force " + str(netForce) + " Newtons.")
+            elif event.key == pg.K_v:
+                speak("The current velocity is " + str(round(v[-1], 1)) + "metres per second")
+            elif event.key == pg.K_q:
+                running = False
+                pg.quit()
+                sys.exit()
 
+            # Ensures opposition to the direction of motion
             if drivingForce != 0:
-                breakForce = int(
-                    abs(breakForce) * -(drivingForce / abs(drivingForce)))  # ensures opposition to the driving force
-
-            # Used to check old net force against this loops net force
-            newNet = drivingForce + breakForce
-
-            if drivingForce == 0 and np.sign(v[-1]) == np.sign(breakForce):
-                newNet = 0
-
-            # Regenerates the sound when a the net force changes
-            if newNet != netForce:
-                netForce = newNet
-                if drivingForce != 0 or breakForce != 0:
-                    liveSound(timeCounter, v, netForce)
-
-    # Display the forces acting on the graph
-    displayForces([drivingForce, breakForce, netForce])
+                breakForce = int(abs(breakForce) * -(drivingForce / abs(drivingForce)))
+            elif v[-1] != 0:
+                breakForce = int(abs(breakForce) * -(v[-1] / abs(v[-1])))
 
     # Update screen and increment counter
     pg.display.update()
