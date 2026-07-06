@@ -13,9 +13,12 @@ generator:
       osc1:
         form: 'saw'
         detune: 0.3
+
+    
+
 map:
   - output: 'time_evo'
   - output: 'pitch_shift'
   - output: 'volume'
 
-notes: ['A1', 'B3']
+notes: ['C6']

@@ -12,8 +12,8 @@ pg.init()
 
 # Initialising sound tools
 pg.mixer.init()
-channel = pg.mixer.Channel(1)
-vtSoni = pg.mixer.Sound("vtSound.wav")
+speechChannel = pg.mixer.Channel(0)
+soniChannel = pg.mixer.Channel(1)
 
 # setting the frequency of the running loop
 fps = 60
@@ -21,24 +21,29 @@ timer = pg.time.Clock()
 
 # Indexing parameters
 dataPoints = 500
-indexCounter = 0
 lim = 1e-3
 
 # Initialising time variables
 playBackSpeed = 1
-timeRange = 60 * playBackSpeed
+timeRange = 60
+timeInc = (timeRange / dataPoints) * playBackSpeed
 timeCounter = 0
-timeInc = playBackSpeed * (timeRange / dataPoints)
-soniLength = 60 / playBackSpeed
+soniLength = timeRange / (2 * playBackSpeed)
+soniTimer = 0
 
 # Physical properties presets
 m = 1e5  # kg
 forceInc = 10000  # N
 v = np.zeros(dataPoints)
+t = np.zeros(dataPoints)
+drivingForces = np.zeros(dataPoints)
+breakForces = np.zeros(dataPoints)
+netForces = np.zeros(dataPoints)
 
 # Initialising forces
 drivingForce = 0
 breakForce = 0
+friction = 0
 netForce = 0
 
 # Storing the constant colours that will be used
@@ -48,6 +53,8 @@ WHITE = (255, 255, 255)
 # Global boolean variables
 internetWasConnected = True
 wasPlaying = False
+frictionless = False
+sonification = True
 
 # Initialise fonts for display
 forceFont = pg.font.Font(None, 70)
@@ -65,6 +72,43 @@ def vtFunc(t, u, F):
     return a * t + u
 
 
+# Simple quadratic friction calculator
+def fricCalc(velocity):
+    return -np.sign(velocity) * (velocity ** 2) * 80
+
+
+# Function to update the values in a force array
+def rollUpdate(array, curVal):
+    array = np.roll(array, -1)
+    array[-1] = curVal
+    return array
+
+
+# Generates and plays sonification of data a few seconds after the data was created and displayed on the graph
+def delayedSoni(times, velocities, drvforces, brkForces, netForces):
+    global frictionless
+
+    timeIncrement = times[1] - times[0]
+    soniSample = int(soniLength / timeIncrement)
+
+    velSoni = velocities[-soniSample:]
+    tSoni = np.linspace(0, soniLength, soniSample)
+    drvSoni = drvforces[-soniSample:]
+    brkSoni = brkForces[-soniSample:]
+    netSoni = netForces[-soniSample:]
+    if not frictionless:
+        fricSoni = fricCalc(velSoni)
+        sts.sonify(tSoni, fricSoni, style="windy", duration=soniLength, system='mono')
+
+    # Saves the sonification and closes STRAUSS
+    sts.save("vtSound.wav")
+    sts.close()
+
+    # Loads and plays the sonification using pygame sound objects
+    vtSoni = pg.mixer.Sound("vtSound.wav")
+    soniChannel.play(vtSoni)
+
+
 # Generates and plays the sound adapted to input
 def liveSound(time, v, netForce):
     global wasPlaying
@@ -73,6 +117,7 @@ def liveSound(time, v, netForce):
     # Calculating the new behaviour based on the new parameters
     projectedTime = np.linspace(time, time + timeRange, dataPoints)
     projectedVel = vtFunc(projectedTime, v[-1], netForce)
+    projectedFric = fricCalc(projectedVel)
 
     # first get the simple integral by just using a cumulative sum
     displacement = np.cumsum(projectedVel)
@@ -92,26 +137,42 @@ def liveSound(time, v, netForce):
     secondDiff = np.diff(np.diff(projectedTime))
     diffLen = len(secondDiff)
 
-    # Mask to find positive and negative gradient
+    # Masks to find positive and negative gradient
     localMaxMask = secondDiff < 0
+    localMinMask = secondDiff > 0
 
     # Loop so that only the point where the sign of the gradient changes is selected
     for i in range(diffLen - 1):
-        if localMaxMask[i] and localMaxMask[i + 1]:
+        if localMaxMask[i] == localMaxMask[i + 1]:
             localMaxMask[i] = False
 
-    # Assigns a volume for the point of the change of sign the gradient
-    localMaxPos = np.zeros(diffLen)
-    localMaxs = localMaxPos[localMaxMask]
-    numMax = len(localMaxs)
-    localMaxPos[localMaxMask] = np.ones(numMax)
+        if localMinMask[i] == localMinMask[i + 1]:
+            localMinMask[i] = False
 
+    # Assigns a volume for the points where the gradient changes sign
+    localMaxPos = np.zeros(diffLen)
+    localMinPos = np.zeros(diffLen)
+
+    localMaxs = localMaxPos[localMaxMask]
+    localMins = localMinPos[localMinMask]
+
+    numMax = len(localMaxs)
+    numMin = len(localMins)
+
+    localMaxPos[localMaxMask] = np.ones(numMax)
+    localMinPos[localMinMask] = np.ones(numMin)
+
+    # Pads arrays so they match the length of the original dataset
     offSet = dataPoints - diffLen
     for i in range(offSet):
         localMaxPos = np.append(localMaxPos, [0])
+        localMinPos = np.append(localMinPos, [0])
 
-    # Generates the sonification for the local maximums
-    # sts.sonify(event_times, np.ones(dataPoints), localMaxPos, style="railway.yml", duration=soniLength)
+    # Generates the sonification for the local maximums and minimums
+    sts.sonify(event_times, np.ones(dataPoints), localMinPos,
+               style="whistle1.yml", duration=soniLength)
+    sts.sonify(event_times, np.ones(dataPoints), localMaxPos,
+               style="whistle2.yml", duration=soniLength)
 
     # Saves the sonification and closes STRAUSS
     sts.save("vtSound.wav")
@@ -119,15 +180,13 @@ def liveSound(time, v, netForce):
 
     # Loads and plays the sonification using pygame sound objects
     vtSoni = pg.mixer.Sound("vtSound.wav")
-    channel.play(vtSoni, loops=-1)  # Loops sound continuously
-    wasPlaying = True
+    soniChannel.play(vtSoni)
+
 
 
 # A procedure which takes string input and uses gtts to generate and play the string as spoken content
 def speak(text):
     global internetWasConnected
-    global wasPlaying
-    global vtSoni
 
     # Generates speech if there is an internet connection or plays an error message
     try:
@@ -145,17 +204,14 @@ def speak(text):
             speech = pg.mixer.Sound("noInternet.mp3")
             internetWasConnected = False
 
-    channel.play(speech)
+    speechChannel.play(speech)
+    sleep(speech.get_length())
 
-    # Restarts the sonification after the speech if it was on
-    if wasPlaying:
-        sleep(speech.get_length())
-        channel.play(vtSoni, loops=-1)  # Loops sound continuously
 
 
 # Presents all the forces on the right of the figure
 def displayForces(forces):
-    forceNames = ["Driving Force", "Break Force", "Net Force"]
+    forceNames = ["Driving Force", "Break Force", "Net Force", "Friction"]
 
     for i in range(0, len(forces)):
         # Making the force ready for display with directional arrows
@@ -165,7 +221,7 @@ def displayForces(forces):
         elif forces[i] < 0:
             arrow = "<-"
 
-        displayForce = int(forces[i] / 1000)
+        displayForce = round(forces[i] / 1000, 1)
         forceInfo = forceNames[i] + ": " + str(displayForce) + " kN " + arrow
 
         # Rendering and displaying the text
@@ -182,17 +238,21 @@ while running:
     timer.tick(fps)
     SCREEN.fill(BLACK)
 
-    if indexCounter < dataPoints:
-        v[indexCounter] = vtFunc(timeInc, v[indexCounter - 1], netForce)
-        indexCounter += 1
-        t = np.linspace(0, timeInc * dataPoints, dataPoints)
-    else:
-        v = np.roll(v, -1)
-        v[-1] = vtFunc(timeInc, v[-2], netForce)
-        t = np.linspace(timeCounter, timeCounter + timeRange, dataPoints)
+    # Define the time axis and increment for the loop
+    t = rollUpdate(t, timeCounter)
 
-    # Used to check old net force against this loops net force
-    newNet = drivingForce + breakForce
+    # Updating the velocity array
+    v = np.roll(v, -1)
+    v[-1] = vtFunc(timeInc, v[-2], netForce)
+
+    # Implements friction if activated
+    if not frictionless:
+        friction = fricCalc(v[-1])
+    else:
+        friction = 0
+
+    # Resolves the forces
+    netForce = drivingForce + breakForce + friction
 
     # Makes sure the break force behaves physically
     if abs(breakForce) > abs(drivingForce):
@@ -200,13 +260,18 @@ while running:
             v[-1] = 0
 
         if abs(v[-1]) <= lim:
-            newNet = 0
+            netForce = 0
 
-    # Regenerates the sound when a the net force changes
-    if newNet != netForce:
-        netForce = newNet
-        if netForce != 0:
-            liveSound(timeCounter, v, netForce)
+    # Updating the arrays which store the forces
+    drivingForces = rollUpdate(drivingForces, drivingForce)
+    breakForces = rollUpdate(breakForces, breakForce)
+    netForces = rollUpdate(netForces, netForce)
+
+    # Regenerates the sound when a the current sonification runs out
+    if sonification and soniTimer >= soniLength:
+        delayedSoni(t, v, drivingForces, breakForces, netForces)
+        soniTimer = 0
+    soniTimer += 1 / fps
 
     # Generating and plotting the figure
     plt.figure()
@@ -235,7 +300,10 @@ while running:
     SCREEN.blit(fig, figPos)
 
     # Display the forces acting on the graph
-    displayForces([drivingForce, breakForce, netForce])
+    actingForces = [drivingForce, breakForce, netForce]
+    if not frictionless:
+        actingForces.append(friction)
+    displayForces(actingForces)
 
     # Checks for and handles events in the event queue
     for event in pg.event.get():
@@ -246,9 +314,11 @@ while running:
             sys.exit()
         if event.type == pg.KEYDOWN:
             if event.key == pg.K_UP:
-                drivingForce += forceInc
+                if int(drivingForce) < 2e5:
+                    drivingForce += forceInc
             elif event.key == pg.K_DOWN:
-                drivingForce -= forceInc
+                if int(drivingForce) > -2e5:
+                    drivingForce -= forceInc
             elif event.key == pg.K_LEFT:
                 if abs(breakForce) <= 0:
                     breakForce = 0
@@ -262,6 +332,10 @@ while running:
             elif event.key == pg.K_s:
                 message = "Driving force " + str(drivingForce) + " Newtons. Break force " + str(breakForce) \
                           + " Newtons. Net force " + str(netForce) + " Newtons."
+
+                if not frictionless:
+                    message = message + "Frictional Force " + str(round(friction, 1)) + "Newtons."
+
                 speak(message)
             elif event.key == pg.K_d:
                 speak("Driving force " + str(drivingForce) + " Newtons.")
@@ -271,6 +345,23 @@ while running:
                 speak("Net force " + str(netForce) + " Newtons.")
             elif event.key == pg.K_v:
                 speak("The current velocity is " + str(round(v[-1], 1)) + "metres per second")
+            elif event.key == pg.K_f:
+                speak("Frictional Force " + str(round(friction, 1)) + "newtons")
+            elif event.key == pg.K_TAB:
+                frictionless = not frictionless
+                if not frictionless:
+                    speak("Friction activated")
+                else:
+                    speak("Friction deactivated")
+                    friction = 0
+            elif event.key == pg.K_BACKSPACE:
+                drivingForce = - drivingForce
+            elif event.key == pg.K_SPACE:
+                sonification = not sonification
+                if sonification:
+                    speak("Sonification activated")
+                else:
+                    speak("Sonification deactivated")
             elif event.key == pg.K_q:
                 running = False
                 pg.quit()
@@ -278,9 +369,9 @@ while running:
 
             # Ensures opposition to the direction of motion
             if drivingForce != 0:
-                breakForce = int(abs(breakForce) * -(drivingForce / abs(drivingForce)))
+                breakForce = int(-np.sign(drivingForce) * abs(breakForce))
             elif v[-1] != 0:
-                breakForce = int(abs(breakForce) * -(v[-1] / abs(v[-1])))
+                breakForce = int(-np.sign(v[-1]) * abs(breakForce))
 
     # Update screen and increment counter
     pg.display.update()

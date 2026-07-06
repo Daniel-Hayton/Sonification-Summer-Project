@@ -171,7 +171,6 @@ diffLen = len(secondDiff)
 
 localMaxMask = secondDiff < 0
 localMinMask = secondDiff > 0
-print(localMinMask)
 for i in range(diffLen - 1):
     if localMaxMask[i] == localMaxMask[i+1]:
         localMaxMask[i] = False

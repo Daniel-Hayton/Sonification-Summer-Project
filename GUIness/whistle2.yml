@@ -1,4 +1,4 @@
-name: 'railway'
+name: 'whistle2'
 
 description: ''
 
@@ -13,4 +13,4 @@ map:
   - output: 'pitch'
   - output: 'volume'
 
-notes: ['A1']
+notes: ['B1']
