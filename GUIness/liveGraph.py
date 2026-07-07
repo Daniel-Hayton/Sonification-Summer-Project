@@ -359,6 +359,7 @@ while running:
                     speak("Sonification activated")
                 else:
                     speak("Sonification deactivated")
+                    pg.mixer.stop()
             elif event.key == pg.K_q:
                 running = False
                 pg.quit()

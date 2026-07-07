@@ -1,5 +1,5 @@
 import strauss as sts
-from time import sleep
+from pygame.time import wait
 import numpy as np
 from pygame import mixer as mx
 
@@ -17,10 +17,20 @@ soniLength = 5
 x = np.linspace(0, 5, 10)
 y = np.ones(10)
 
-initOutcomes = 2
-for i in range(len(keys)):
-    fig = sts.AudioFigure(system='stereo', length=soniLength)
+probject = input("Do you want to listen to the probability branches of a fair\n1\tDice\n2\tCoin\n\t-> ")
+
+if probject == "1":
+    initOutcomes = int(input("How many sides do you want your dice to have? "))
+else:
+    print("Coin it is.")
+    initOutcomes = 2
+
+for i in range(len(notes)):
+    fig = sts.AudioFigure(system='stereo')
     curOutcomes = initOutcomes ** i
+    if curOutcomes > len(notes) and (initOutcomes ** (i - 1)) > len(notes):
+        print("Too many outcomes to output")
+        break
     audioSep = 1 / (curOutcomes + 1)
     noteSep = len(notes) // (curOutcomes + 1)
     for j in range(curOutcomes):
@@ -46,10 +56,14 @@ notes: ['{soniNote}']"""
         with open('prob.yml', 'w') as f:
             f.write(probStyle)
 
-        sts.sonify(x, y, fix_pan=audioCoordinates, style="prob.yml")
+        fig.sonify(x, y, fix_pan=audioCoordinates, style="prob.yml", duration=soniLength)
 
-    sts.save("prob.wav")
+    fig.save("prob.wav")
+    fig.render()
     sts.close()
     probSoni = mx.Sound("prob.wav")
+    while mx.get_busy():
+        wait(100)
+    probSoni.set_volume(0.2)
     soniChannel.play(probSoni)
-    sleep(soniLength)
+

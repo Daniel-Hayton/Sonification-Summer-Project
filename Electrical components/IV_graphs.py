@@ -203,10 +203,10 @@ notes: ['{soniNote}']"""
 
         # Visual and audio generation of the line of the graph for this component
         plt.plot(voltage, current, label=component)
-        # if diodeing:  # Plot and sonification needs to be handled differently for diodes
-        #     voltage = ogVoltage
-        #     current = diode(voltage)
-        #     current[current > maxI] = 0
+        if diodeing:  # Plot and sonification needs to be handled differently for diodes
+            voltage = ogVoltage
+            current = diode(voltage)
+            current[current > maxI] = 0
         sts.sonify(voltage, current, current,
                    duration=20,
                    system="mono",
