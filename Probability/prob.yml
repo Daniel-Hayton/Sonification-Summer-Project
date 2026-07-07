@@ -1,0 +1,15 @@
+name: 'prob'
+
+description: ''
+
+sources: 'objects'
+
+generator:
+  type: 'synthesizer'
+  preset: 'pitch_mapper'
+
+map:
+  - output: 'time_evo'
+  - output: 'pitch_shift'
+
+notes: ['A1']

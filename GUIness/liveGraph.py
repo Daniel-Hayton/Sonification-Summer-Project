@@ -28,7 +28,7 @@ playBackSpeed = 1
 timeRange = 60
 timeInc = (timeRange / dataPoints) * playBackSpeed
 timeCounter = 0
-soniLength = timeRange / (2 * playBackSpeed)
+soniLength = (dataPoints * timeInc) // 2
 soniTimer = 0
 
 # Physical properties presets
@@ -88,8 +88,7 @@ def rollUpdate(array, curVal):
 def delayedSoni(times, velocities, drvforces, brkForces, netForces):
     global frictionless
 
-    timeIncrement = times[1] - times[0]
-    soniSample = int(soniLength / timeIncrement)
+    soniSample = dataPoints // 2
 
     velSoni = velocities[-soniSample:]
     tSoni = np.linspace(0, soniLength, soniSample)
@@ -97,8 +96,8 @@ def delayedSoni(times, velocities, drvforces, brkForces, netForces):
     brkSoni = brkForces[-soniSample:]
     netSoni = netForces[-soniSample:]
     if not frictionless:
-        fricSoni = fricCalc(velSoni)
-        sts.sonify(tSoni, fricSoni, style="windy", duration=soniLength, system='mono')
+        fricSoni = fricCalc(velocities)
+        sts.sonify(times, fricSoni, style="windy", duration=timeRange, system='mono')
 
     # Saves the sonification and closes STRAUSS
     sts.save("vtSound.wav")
@@ -183,7 +182,6 @@ def liveSound(time, v, netForce):
     soniChannel.play(vtSoni)
 
 
-
 # A procedure which takes string input and uses gtts to generate and play the string as spoken content
 def speak(text):
     global internetWasConnected
@@ -206,7 +204,6 @@ def speak(text):
 
     speechChannel.play(speech)
     sleep(speech.get_length())
-
 
 
 # Presents all the forces on the right of the figure
@@ -268,7 +265,7 @@ while running:
     netForces = rollUpdate(netForces, netForce)
 
     # Regenerates the sound when a the current sonification runs out
-    if sonification and soniTimer >= soniLength:
+    if sonification and soniTimer >= timeRange:
         delayedSoni(t, v, drivingForces, breakForces, netForces)
         soniTimer = 0
     soniTimer += 1 / fps

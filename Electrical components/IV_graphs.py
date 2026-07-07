@@ -2,20 +2,20 @@ import strauss as sts
 import numpy as np
 import matplotlib as mpl
 from matplotlib import pyplot as plt
-import pygame as pg
+from pygame import mixer as mx
 
 # Set up parameters for figure plotting
 mpl.use("tkagg", force=True)
 plt.style.use("dark_background")
 
 # Initialising sound tools
-pg.mixer.init()
-soniChannel = pg.mixer.Channel(1)
+mx.init()
+soniChannel = mx.Channel(1)
 
-keys = ["A", "B", "C", "D", "E", "F", "G", "H"]
+keys = ["A", "B", "C", "D", "E", "F", "G"]
 notes = []
 for i in range(len(keys)):
-    for j in range(len(keys)):
+    for j in range(5):
         notes.append(keys[j] + str(i + 1))
 
 
@@ -136,24 +136,51 @@ while True:
             print(soniNote)
             sparkyStyle = f"""name: 'sparky'
 
-description: ''
+description: 'Electrical crackle'
 
 sources: 'objects'
 
 generator:
   type: 'synthesizer'
-  preset: 'pitch_mapper'
+  preset: 'default'
   mods:
-    filter: 'on'
-    oscillators:
-      osc1:
-        form: 'saw'
-        detune: 0.3
 
-    
+    filter: 'on'
+    filter_type: 'HPF1'
+    cutoff: 0.2
+
+    oscillators:
+
+      osc1:
+        form: 'square'
+        level: 0.4
+
+      osc2:
+        form: 'noise'
+        level: 0.8
+     
+      osc3:
+        form: "square"
+        level: 0.25
+        detune: 0.5
+
+    pitch_lfo:
+      use: 'on'
+      wave: 'noise'
+      amount: 0.15
+      freq: 15
+      level: 1
+
+    volume_lfo:
+      use: 'on'
+      wave: 'noise'
+      amount: 1.0
+      freq: 30
+      level: 1
 
 map:
   - output: 'time_evo'
+    input_range: [{minV}, {maxV}]
   - output: 'pitch_shift'
   - output: 'volume'
 
@@ -176,10 +203,10 @@ notes: ['{soniNote}']"""
 
         # Visual and audio generation of the line of the graph for this component
         plt.plot(voltage, current, label=component)
-        if diodeing:  # Plot and sonification needs to be handled differently for diodes
-            voltage = ogVoltage
-            current = diode(voltage)
-            current[current > maxI] = 0
+        # if diodeing:  # Plot and sonification needs to be handled differently for diodes
+        #     voltage = ogVoltage
+        #     current = diode(voltage)
+        #     current[current > maxI] = 0
         sts.sonify(voltage, current, current,
                    duration=20,
                    system="mono",
@@ -189,7 +216,7 @@ notes: ['{soniNote}']"""
     sts.save("electrifying.wav")
 
     # Loads and plays the sonification using pygame sound objects
-    ivSoni = pg.mixer.Sound("electrifying.wav")
+    ivSoni = mx.Sound("electrifying.wav")
     soniChannel.play(ivSoni)
 
     # Fixes the parameters for display if graph includes a diode

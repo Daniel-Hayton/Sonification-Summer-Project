@@ -14,4 +14,4 @@ map:
   - output: 'pitch_shift'
   - output: 'volume'
 
-notes: 'E5'
+notes: ['E5']
