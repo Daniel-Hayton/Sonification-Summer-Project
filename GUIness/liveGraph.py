@@ -97,7 +97,7 @@ def delayedSoni(times, velocities, drvforces, brkForces, netForces):
     netSoni = netForces[-soniSample:]
     if not frictionless:
         fricSoni = fricCalc(velocities)
-        sts.sonify(times, fricSoni, style="windy", duration=timeRange, system='mono')
+        sts.sonify(times, fricSoni, style="fricStyle.yml", duration=timeRange, system='mono')
 
     # Saves the sonification and closes STRAUSS
     sts.save("vtSound.wav")

@@ -1,5 +1,5 @@
 name: 'sparky'
-
+    
 description: ''
 
 sources: 'objects'
@@ -10,40 +10,24 @@ generator:
   mods:
   
     pitch_lfo:
-      use: off
+      use: on
       wave: 'saw'
       amount: 0.5
-      freq: 4
-      freq_shift: 0
+      freq: 50
       phase: 'random'
-      A: 0.3
-      D: 0.1
-      S: 1.
-      R: 0.
-      Ac: 0.
-      Dc: 0.
-      Rc: 0.
-      level: 1
       
     volume_lfo:
       use: on
       wave: 'square'
       amount: 1
-      freq: 2
-      freq_shift: 0
-      A: 0.
-      D: 0.
-      S: 1.5
-      R: 0.
-      Ac: 0.
-      Dc: 0.
-      Rc: 0.
-      level: 1
-
+      freq: 4
     
 map:
   - output: 'time_evo'
-    input_range: [0, 20]
+    input_range: [1.5, 12.0]
   - output: 'pitch_shift'
+  - output: 'volume_lfo/freq_shift'
+  - output: 'volume'
+    input_range: [0, 5.0]
 
-notes: ['B3', 'C4']
+notes: ['E5', 'C7']

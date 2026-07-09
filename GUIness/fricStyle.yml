@@ -1,0 +1,16 @@
+name: 'fricStyle'
+
+description: ''
+
+sources: 'objects'
+
+generator:
+  type: 'synthesizer'
+  preset: 'windy'
+
+map:
+  - output: 'time_evo'
+  - output: 'cutoff'
+    input_range: [0, 200]
+
+notes: ['A3']
