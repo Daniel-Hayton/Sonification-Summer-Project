@@ -16,7 +16,7 @@ generator:
 map:
   - output: 'time_evo'
   - output: 'cutoff'
-    input_range: [0, 200]
+    input_range: [0, 200000]
     output_range: [0, 0.6]
 
 notes: ['B4']

@@ -81,6 +81,10 @@ sts.sonify(t, np.zeros(dataPoints), style="fricStyle.yml", duration=soniLength)
 sts.save("vtSound.wav")
 sts.close()
 
+# Outputs the initial audio
+vtSoni = pg.mixer.Sound("vtSound.wav")
+soniChannel.play(vtSoni)
+
 # Function that holds the physical relation between the forces, time and velocity
 def vtFunc(t, u, F):
     a = F / m
@@ -117,13 +121,6 @@ def delayedSoni(times, velocities, drvforces, brkForces, netForces):
     # Generates the audio figure which the sonification will be layered on to
     fig = sts.AudioFigure(system='stereo')
 
-    # Cutoff sonification for frictional forces
-    if not frictionless:
-        fricSoni = abs(fricCalc(velSoni))
-        fig.sonify(tSoni, fricSoni, style="fricStyle.yml", duration=soniLength)
-
-    soni = fig.sonify(tSoni, abs(drvSoni), style="train2.yml", duration=soniLength)
-
     # Computes the difference in velocities and the sign change
     velDiff = np.diff(velSoni)
     signDiff = np.sign(velDiff)
@@ -140,92 +137,50 @@ def delayedSoni(times, velocities, drvforces, brkForces, netForces):
     soniMins = np.zeros(soniSample)
 
     # Sets volumes only for indexes with maxima or minima
-    soniMins[minMask] = velSoni[minMask]
-    soniMaxs[maxMask] = velSoni[maxMask]
+    soniMins[minMask] = np.abs(velSoni[minMask])
+    soniMaxs[maxMask] = np.abs(velSoni[maxMask])
+    # soniMins[minMask] = 1
+    # soniMaxs[maxMask] = 1
 
     # Generates the sonification for the local maximums and minimums
-    # fig.sonify(tSoni, soniFiller, soniMins, style="whistle1.yml", duration=soniLength)
-    # fig.sonify(tSoni, soniFiller, soniMaxs, style="whistle2.yml", duration=soniLength)
+    if len(minMask) > 0:
+        fig.sonify(tSoni, soniFiller, soniMins, style="whistle1.yml", duration=soniLength, fix_pan=0)
+    if len(maxMask) > 0:
+        fig.sonify(tSoni, soniFiller, soniMaxs, style="whistle2.yml", duration=soniLength, fix_pan=1)
+
+    # Cutoff sonification for frictional forces
+    if not frictionless:
+        fricSoni = np.abs(fricCalc(velSoni))
+        fig.sonify(tSoni, fricSoni, style="fricStyle.yml", duration=soniLength)
+
+    # Rhythmic mapping for driving force
+    # soni = fig.sonify(tSoni, np.abs(drvSoni), style="train2.yml", duration=soniLength)
+
+    # Pitch mapping for the break force
+    brkSoni = np.abs(brkSoni)
+    if np.max(brkSoni) > 0:
+        fig.sonify(tSoni, brkSoni, brkSoni, style="squeaky.yml", duration=soniLength)
+
+    # Gets the integral by using a cumulative sum
+    displacement = np.cumsum(velSoni)
+    maxDis = np.max(displacement)
+    if maxDis != 0:
+        displacement /= maxDis
+
+        # Sets up uniform increments
+        incs = np.linspace(0, 1, soniSample + 1)
+        incs = incs[:-1] + np.diff(incs) * 0.5
+
+        # Interpolation for each sample between 0 and 1
+        eventTimes = np.interp(incs, displacement, tSoni)
+        # fig.sonify(eventTimes, soniFiller, style="clickety.yml", duration=soniLength)
 
     # Adds ticks to help listener to keep time
-    # soni.add_ticks(increment=1, duration=0.04, tick_vol=0.25)
+    # soni.add_ticks(increment=1, duration=0.04, tick_vol=1)
 
     # Saves the sonification and closes STRAUSS
     fig.save("vtSound.wav")
     sts.close()
-
-
-# Generates and plays the sound adapted to input
-def liveSound(time, v, netForce):
-    global wasPlaying
-
-    # Calculating the new behaviour based on the new parameters
-    projectedTime = np.linspace(time, time + timeRange, dataPoints)
-    projectedVel = vtFunc(projectedTime, v[-1], netForce)
-    projectedFric = fricCalc(projectedVel)
-
-    # first get the simple integral by just using a cumulative sum
-    displacement = np.cumsum(projectedVel)
-    displacement /= displacement.max()
-
-    # now set up the uniform increments
-    incs = np.linspace(0, 1, dataPoints + 1)
-    incs = incs[:-1] + np.diff(incs) * 0.5
-
-    # now interpolate for the times between (0,1) for each of the N_samp ticks
-    event_times = np.interp(incs, displacement, projectedTime)
-
-    # Generates sonification for the background
-    sts.sonify(event_times, np.ones(dataPoints), style="train.yml", duration=soniLength)
-
-    # Calculates the second difference of the time intervals
-    secondDiff = np.diff(np.diff(projectedTime))
-    diffLen = len(secondDiff)
-
-    # Masks to find positive and negative gradient
-    localMaxMask = secondDiff < 0
-    localMinMask = secondDiff > 0
-
-    # Loop so that only the point where the sign of the gradient changes is selected
-    for i in range(diffLen - 1):
-        if localMaxMask[i] == localMaxMask[i + 1]:
-            localMaxMask[i] = False
-
-        if localMinMask[i] == localMinMask[i + 1]:
-            localMinMask[i] = False
-
-    # Assigns a volume for the points where the gradient changes sign
-    localMaxPos = np.zeros(diffLen)
-    localMinPos = np.zeros(diffLen)
-
-    localMaxs = localMaxPos[localMaxMask]
-    localMins = localMinPos[localMinMask]
-
-    numMax = len(localMaxs)
-    numMin = len(localMins)
-
-    localMaxPos[localMaxMask] = np.ones(numMax)
-    localMinPos[localMinMask] = np.ones(numMin)
-
-    # Pads arrays so they match the length of the original dataset
-    offSet = dataPoints - diffLen
-    for i in range(offSet):
-        localMaxPos = np.append(localMaxPos, [0])
-        localMinPos = np.append(localMinPos, [0])
-
-    # Generates the sonification for the local maximums and minimums
-    sts.sonify(event_times, np.ones(dataPoints), localMinPos,
-               style="whistle1.yml", duration=soniLength)
-    sts.sonify(event_times, np.ones(dataPoints), localMaxPos,
-               style="whistle2.yml", duration=soniLength)
-
-    # Saves the sonification and closes STRAUSS
-    sts.save("vtSound.wav")
-    sts.close()
-
-    # Loads and plays the sonification using pygame sound objects
-    vtSoni = pg.mixer.Sound("vtSound.wav")
-    soniChannel.play(vtSoni)
 
 
 # A procedure which takes string input and uses gtts to generate and play the string as spoken content
@@ -302,11 +257,11 @@ while running:
     netForce = drivingForce + breakForce + friction
 
     # Makes sure the break force behaves physically
-    if abs(breakForce) > abs(drivingForce):
+    if np.abs(breakForce) > np.abs(drivingForce):
         if np.sign(v[-2]) != np.sign(v[-1]):
             v[-1] = 0
 
-        if abs(v[-1]) <= lim:
+        if np.abs(v[-1]) <= lim:
             netForce = 0
 
     # Updating the arrays which store the forces
@@ -345,9 +300,9 @@ while running:
     plt.close()
 
     # Loading and displaying the graph
-    fig = pg.image.load("./vtFig.png")
+    figImg = pg.image.load("./vtFig.png")
     figPos = (0, 0)
-    SCREEN.blit(fig, figPos)
+    SCREEN.blit(figImg, figPos)
 
     # Display the forces acting on the graph
     actingForces = [drivingForce, breakForce, netForce]
@@ -370,12 +325,13 @@ while running:
                 if int(drivingForce) > -2e5:
                     drivingForce -= forceInc
             elif event.key == pg.K_LEFT:
-                if abs(breakForce) <= 0:
+                if np.abs(breakForce) <= 0:
                     breakForce = 0
                 else:
-                    breakForce = int(abs(breakForce) - forceInc)
+                    breakForce = int(np.abs(breakForce) - forceInc)
             elif event.key == pg.K_RIGHT:
-                breakForce = int(abs(breakForce) + forceInc)
+                if np.abs(breakForce) < 2.5e5:
+                    breakForce = int(np.abs(breakForce) + forceInc)
             elif event.key == pg.K_r:
                 drivingForce = 0
                 breakForce = 0
@@ -406,6 +362,10 @@ while running:
                     friction = 0
             elif event.key == pg.K_BACKSPACE:
                 drivingForce = - drivingForce
+            elif event.key == pg.K_LSHIFT:
+                drivingForce = 0
+            elif event.key == pg.K_RSHIFT:
+                breakForce = 0
             elif event.key == pg.K_SPACE:
                 sonification = not sonification
                 if sonification:
@@ -420,9 +380,9 @@ while running:
 
             # Ensures opposition to the direction of motion
             if drivingForce != 0:
-                breakForce = int(-np.sign(drivingForce) * abs(breakForce))
+                breakForce = int(-np.sign(drivingForce) * np.abs(breakForce))
             elif v[-1] != 0:
-                breakForce = int(-np.sign(v[-1]) * abs(breakForce))
+                breakForce = int(-np.sign(v[-1]) * np.abs(breakForce))
 
     # Update screen and increment counter
     pg.display.update()

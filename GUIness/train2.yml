@@ -22,6 +22,6 @@ generator:
 map:
   - output: 'time_evo'
   - output: 'volume_lfo/freq_shift'
-    input_range: [0, 200]
+    input_range: [0, 200000]
 
 notes: ['F2']

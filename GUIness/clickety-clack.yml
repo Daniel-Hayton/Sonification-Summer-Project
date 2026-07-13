@@ -1,8 +1,0 @@
-name: 'clickety-clack'
-
-description: ''
-
-sources: 'events'
-
-generator:
-  type:

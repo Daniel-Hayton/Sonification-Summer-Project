@@ -1,0 +1,17 @@
+name: 'squeaky'
+
+description: ''
+
+sources: 'objects'
+
+generator:
+  type: 'synthesizer'
+  preset: 'default'
+
+map:
+  - output: 'time_evo'
+  - output: 'pitch_shift'
+    input_range: [0, 250000]
+  - output: 'volume'
+
+notes: ['E5']

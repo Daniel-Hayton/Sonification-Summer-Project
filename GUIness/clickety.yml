@@ -1,0 +1,23 @@
+rname: 'clickety'
+
+description: ''
+
+sources: 'events'
+
+generator:
+  type: 'synthesizer'
+  preset: 'default'
+  mods:
+    oscillators:
+      volume_envelope:
+        use: on
+        A: 0.001
+        D: 0.05
+        S: 0.
+        R: 0.05
+
+  map:
+    - output: 'time'
+    - output: 'pitch'
+
+  notes: ['D2']
