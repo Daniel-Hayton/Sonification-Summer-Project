@@ -5,6 +5,7 @@ import pygame as pg
 from matplotlib import pyplot as plt
 from gtts import gTTS
 from time import sleep
+from time import time
 
 # Presets for graphing and initialising modules
 plt.style.use("dark_background")
@@ -15,21 +16,28 @@ pg.mixer.init()
 speechChannel = pg.mixer.Channel(0)
 soniChannel = pg.mixer.Channel(1)
 
-# setting the frequency of the running loop
-fps = 60
+# Setting the frequency of the running loop
+fps = 10
 timer = pg.time.Clock()
 
 # Indexing parameters
-dataPoints = 500
+playBack = 6
+dataPoints = int((playBack * 10 * fps) / 6)  # Multiple of 60 ensuring integer divisions with frames per second
 lim = 1e-3
 
 # Initialising time variables
-playBackSpeed = 1
+startTime = time()
+gapTime = 0
+beforeTime = 0
 timeRange = 60
-timeInc = (timeRange / dataPoints) * playBackSpeed
+timeInc = timeRange / dataPoints
 timeCounter = 0
-soniLength = (dataPoints * timeInc) // 2
-soniTimer = 0
+
+# Sonification parameters
+soniLength = dataPoints / (2 * fps)
+soniSample = dataPoints // 2
+soniFiller = np.ones(soniSample)
+
 
 # Physical properties presets
 m = 1e5  # kg
@@ -55,6 +63,7 @@ internetWasConnected = True
 wasPlaying = False
 frictionless = False
 sonification = True
+firstTime = True
 
 # Initialise fonts for display
 forceFont = pg.font.Font(None, 70)
@@ -65,6 +74,12 @@ SCREEN = pg.display.set_mode((info.current_w, info.current_h))  # Fills the enti
 pg.display.set_caption("vt-Graph")
 pg.mouse.set_visible(False)
 
+print("Play back speed is x" + str(timeInc * fps))
+
+# Reset the audio file before entering the loop to prevent previous data being outputted
+sts.sonify(t, np.zeros(dataPoints), style="fricStyle.yml", duration=soniLength)
+sts.save("vtSound.wav")
+sts.close()
 
 # Function that holds the physical relation between the forces, time and velocity
 def vtFunc(t, u, F):
@@ -88,30 +103,61 @@ def rollUpdate(array, curVal):
 def delayedSoni(times, velocities, drvforces, brkForces, netForces):
     global frictionless
 
-    soniSample = dataPoints // 2
+    # Loads and plays the sonification of the previously processed data using pygame sound objects
+    vtSoni = pg.mixer.Sound("vtSound.wav")
+    soniChannel.play(vtSoni)
 
+    # Sampling and processing the data while current sonification is playing
     velSoni = velocities[-soniSample:]
-    tSoni = np.linspace(0, soniLength, soniSample)
+    tSoni = times[-soniSample:]
     drvSoni = drvforces[-soniSample:]
     brkSoni = brkForces[-soniSample:]
     netSoni = netForces[-soniSample:]
+
+    # Generates the audio figure which the sonification will be layered on to
+    fig = sts.AudioFigure(system='stereo')
+
+    # Cutoff sonification for frictional forces
     if not frictionless:
-        fricSoni = fricCalc(velocities)
-        sts.sonify(times, fricSoni, style="fricStyle.yml", duration=timeRange, system='mono')
+        fricSoni = abs(fricCalc(velSoni))
+        fig.sonify(tSoni, fricSoni, style="fricStyle.yml", duration=soniLength)
+
+    soni = fig.sonify(tSoni, abs(drvSoni), style="train2.yml", duration=soniLength)
+
+    # Computes the difference in velocities and the sign change
+    velDiff = np.diff(velSoni)
+    signDiff = np.sign(velDiff)
+
+    # Change in sign
+    signChange = np.diff(signDiff)
+
+    # Finds the local maxima and minima
+    maxMask = np.where(signChange < 0)[0] + 1
+    minMask = np.where(signChange > 0)[0] + 1
+
+    # Base values needed to pad out the sonification
+    soniMaxs = np.zeros(soniSample)
+    soniMins = np.zeros(soniSample)
+
+    # Sets volumes only for indexes with maxima or minima
+    soniMins[minMask] = velSoni[minMask]
+    soniMaxs[maxMask] = velSoni[maxMask]
+
+    # Generates the sonification for the local maximums and minimums
+    # fig.sonify(tSoni, soniFiller, soniMins, style="whistle1.yml", duration=soniLength)
+    # fig.sonify(tSoni, soniFiller, soniMaxs, style="whistle2.yml", duration=soniLength)
+
+    # Adds ticks to help listener to keep time
+    # soni.add_ticks(increment=1, duration=0.04, tick_vol=0.25)
 
     # Saves the sonification and closes STRAUSS
-    sts.save("vtSound.wav")
+    fig.save("vtSound.wav")
     sts.close()
-
-    # Loads and plays the sonification using pygame sound objects
-    vtSoni = pg.mixer.Sound("vtSound.wav")
-    soniChannel.play(vtSoni)
 
 
 # Generates and plays the sound adapted to input
 def liveSound(time, v, netForce):
     global wasPlaying
-    global vtSoni
 
     # Calculating the new behaviour based on the new parameters
     projectedTime = np.linspace(time, time + timeRange, dataPoints)
@@ -235,7 +281,11 @@ while running:
     timer.tick(fps)
     SCREEN.fill(BLACK)
 
-    # Define the time axis and increment for the loop
+    # Update the time axis with the new time counter value
+    if t[0] != 0 and firstTime:
+        graphTime = time() - startTime
+        print("Bang", graphTime)
+        firstTime = False
     t = rollUpdate(t, timeCounter)
 
     # Updating the velocity array
@@ -265,10 +315,13 @@ while running:
     netForces = rollUpdate(netForces, netForce)
 
     # Regenerates the sound when a the current sonification runs out
-    if sonification and soniTimer >= timeRange:
+    if sonification and not soniChannel.get_busy():
+        curTime = time() - startTime
+        gapTime = curTime - beforeTime
+        beforeTime = curTime
+        print(gapTime)
+        print(curTime)
         delayedSoni(t, v, drivingForces, breakForces, netForces)
-        soniTimer = 0
-    soniTimer += 1 / fps
 
     # Generating and plotting the figure
     plt.figure()

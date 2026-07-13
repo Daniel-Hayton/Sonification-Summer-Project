@@ -1,4 +1,4 @@
-name: 'fricStyle'
+name: 'train'
 
 description: ''
 
@@ -13,10 +13,15 @@ generator:
       osc1:
         form: 'noise'
 
+    volume_lfo:
+      use: on
+      wave: 'sine'
+      amount: 1
+      freq: 1
+
 map:
   - output: 'time_evo'
-  - output: 'cutoff'
+  - output: 'volume_lfo/freq_shift'
     input_range: [0, 200]
-    output_range: [0, 0.6]
 
-notes: ['B4']
+notes: ['F2']

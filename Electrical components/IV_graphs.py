@@ -117,6 +117,9 @@ while True:
         temperature = np.zeros(dataPoints)
         resistance = 0
 
+        # Sets the length of the sonification
+        soniLength = float(input("How long would you like the sonification to last? "))
+
         # User chooses the identifier style for the sonification if there is more than 1 item
         notable = False
         spacial = False
@@ -266,7 +269,7 @@ notes: ['E3']
             # Visual and audio generation of the line of the graph for this component
             plt.plot(voltage, current, label=component)
             sts.sonify(voltage, abs(current), abs(temperature), abs(varRes),
-                       duration=30,
+                       duration=soniLength,
                        system="mono",
                        style=soundStyle,
                        fix_pan=audioPos)
