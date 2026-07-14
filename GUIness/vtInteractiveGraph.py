@@ -158,7 +158,7 @@ def delayedSoni(times, velocities, drvforces, brkForces, netForces, fricForces):
     absDrv = np.abs(drvSoni)
     if np.max(absDrv) > 0:
         fig.sonify(tSoni, absDrv, panHandling(drvSoni), np.sign(absDrv),
-                   style="style_train2.yml", duration=soniLength, level="-10 db")
+                   style="style_chuff.yml", duration=soniLength)
 
     # Pitch mapping for the break force
     absBrk = np.abs(brkSoni)

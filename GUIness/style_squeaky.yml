@@ -16,5 +16,6 @@ map:
     input_range: [0, 1]
   - output: 'volume'
     input_range: [0, 1]
+    output_range: [0, 0.5]
 
 notes: ['E5']
