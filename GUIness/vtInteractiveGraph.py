@@ -5,7 +5,6 @@ import pygame as pg
 from matplotlib import pyplot as plt
 from gtts import gTTS
 from time import sleep
-from time import time
 
 # Presets for graphing and initialising modules
 plt.style.use("dark_background")
@@ -26,9 +25,6 @@ dataPoints = int((playBack * 10 * fps) / 6)  # Multiple of 60 ensuring integer d
 lim = 1e-3
 
 # Initialising time variables
-startTime = time()
-gapTime = 0
-beforeTime = 0
 timeRange = 60
 timeInc = timeRange / dataPoints
 timeCounter = 0
@@ -63,7 +59,6 @@ internetWasConnected = True
 wasPlaying = False
 frictionless = False
 sonification = True
-firstTime = True
 
 # Initialise fonts for display
 forceFont = pg.font.Font(None, 70)
@@ -77,7 +72,7 @@ pg.mouse.set_visible(False)
 print("Play back speed is x" + str(timeInc * fps))
 
 # Reset the audio file before entering the loop to prevent previous data being outputted
-sts.sonify(t, np.zeros(dataPoints), style="fricStyle.yml", duration=soniLength)
+sts.sonify(t, np.zeros(dataPoints), style="style_fricWind.yml", duration=soniLength)
 sts.save("audio_vtSound.wav")
 sts.close()
 
@@ -151,27 +146,30 @@ def delayedSoni(times, velocities, drvforces, brkForces, netForces, fricForces):
 
     # Generates the sonification for the local maximums and minimums
     if len(minMask) > 0:
-        fig.sonify(tSoni, soniFiller, soniMins, panHandling(velSoni), style="whistle1.yml", duration=soniLength)
+        fig.sonify(tSoni, soniFiller, soniMins, panHandling(velSoni), style="style_whistle1.yml", duration=soniLength)
     if len(maxMask) > 0:
-        fig.sonify(tSoni, soniFiller, soniMaxs, panHandling(velSoni), style="whistle2.yml", duration=soniLength, fix_pan=1)
+        fig.sonify(tSoni, soniFiller, soniMaxs, panHandling(velSoni), style="style_whistle2.yml", duration=soniLength, fix_pan=1)
 
     # Cutoff sonification for frictional forces
     if not frictionless:
-        soni = fig.sonify(tSoni, np.abs(fricSoni), panHandling(fricSoni), style="fricStyle.yml", duration=soniLength)
+        fig.sonify(tSoni, np.abs(fricSoni), panHandling(fricSoni), style="style_fricWind.yml", duration=soniLength)
 
     # Rhythmic mapping for driving force
-    fig.sonify(tSoni, np.abs(drvSoni), panHandling(drvSoni), style="train2.yml", duration=soniLength)
+    absDrv = np.abs(drvSoni)
+    if np.max(absDrv) > 0:
+        fig.sonify(tSoni, absDrv, panHandling(drvSoni), np.sign(absDrv),
+                   style="style_train2.yml", duration=soniLength, level="-10 db")
 
     # Pitch mapping for the break force
-    brkSoni = np.abs(brkSoni)
-    if np.max(brkSoni) > 0:
-        fig.sonify(tSoni, brkSoni, brkSoni, style="squeaky.yml", duration=soniLength)
+    absBrk = np.abs(brkSoni)
+    if np.max(absBrk) > 0:
+        fig.sonify(tSoni, absBrk, panHandling(brkSoni), np.sign(absBrk), style="style_squeaky.yml", duration=soniLength)
 
     # Gets the integral by using a cumulative sum
     displacement = np.cumsum(velSoni)
-    maxDis = np.max(displacement)
-    if maxDis != 0:
-        displacement /= maxDis
+    absVel = np.abs(velSoni)
+    if np.max(absVel) > 0:  # Stops code running when velocity is entirely zero
+        displacement /= np.max(displacement)  # Normalisation
 
         # Sets up uniform increments
         incs = np.linspace(0, 1, soniSample + 1)
@@ -179,7 +177,8 @@ def delayedSoni(times, velocities, drvforces, brkForces, netForces, fricForces):
 
         # Interpolation for each sample between 0 and 1
         eventTimes = np.interp(incs, displacement, tSoni)
-        # fig.sonify(eventTimes, soniFiller, style="clickety.yml", duration=soniLength)
+        fig.sonify(eventTimes, soniFiller, panHandling(velSoni), np.sign(absVel),
+                   style="style_clickety.yml", duration=soniLength)
 
     # Adds ticks to help listener to keep time
     # soni.add_ticks(increment=(1 / playBack), duration=0.04, tick_vol=0.25)
@@ -197,16 +196,16 @@ def speak(text):
     try:
         # Generates speech using gtts
         speech = gTTS(text=text.lower(), lang="en", slow=False)
-        speech.save("audioCurrentItem.mp3")
+        speech.save("audio_currentItem.mp3")
 
         # Loads and plays speech with pygame mixer
-        speech = pg.mixer.Sound("audioCurrentItem.mp3")
+        speech = pg.mixer.Sound("audio_currentItem.mp3")
         internetWasConnected = True
 
     except:
         if internetWasConnected:
             # Play error message using pygame mixer
-            speech = pg.mixer.Sound("noInternet.mp3")
+            speech = pg.mixer.Sound("audio_noInternet.mp3")
             internetWasConnected = False
 
     speechChannel.play(speech)
@@ -243,10 +242,6 @@ while running:
     SCREEN.fill(BLACK)
 
     # Update the time axis with the new time counter value
-    if t[0] != 0 and firstTime:
-        graphTime = time() - startTime
-        print("Bang", graphTime)
-        firstTime = False
     t = rollUpdate(t, timeCounter)
 
     # Updating the velocity array
@@ -278,11 +273,6 @@ while running:
 
     # Regenerates the sound when a the current sonification runs out
     if sonification and not soniChannel.get_busy():
-        curTime = time() - startTime
-        gapTime = curTime - beforeTime
-        beforeTime = curTime
-        print(gapTime)
-        print(curTime)
         delayedSoni(t, v, drivingForces, breakForces, netForces, frictions)
 
     # Generating and plotting the figure
@@ -303,11 +293,11 @@ while running:
     plt.grid(color='grey')
 
     # Save the figure to be displayed and close pyplot for next loop
-    plt.savefig("vtFig.png")
+    plt.savefig("img_vtFig.png")
     plt.close()
 
     # Loading and displaying the graph
-    figImg = pg.image.load("./vtFig.png")
+    figImg = pg.image.load("img_vtFig.png")
     figPos = (0, 0)
     SCREEN.blit(figImg, figPos)
 
@@ -324,7 +314,7 @@ while running:
             running = False
             pg.quit()
             sys.exit()
-        if event.type == pg.KEYDOWN:
+        if event.type == pg.KEYDOWN and timeCounter > timeRange:
             if event.key == pg.K_UP:
                 if int(drivingForce) < 2e5:
                     drivingForce += forceInc

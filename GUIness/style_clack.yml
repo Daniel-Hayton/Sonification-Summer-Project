@@ -8,16 +8,19 @@ generator:
   type: 'synthesizer'
   preset: 'default'
   mods:
-    oscillators:
-      volume_envelope:
-        use: on
-        A: 0.001
-        D: 0.05
-        S: 0.
-        R: 0.05
+    volume_envelope:
+      use: on
+      A: 0.001
+      D: 0.05
+      S: 0.0
+      R: 0.05
 
-  map:
-    - output: 'time'
-    - output: 'pitch'
+map:
+  - output: 'time'
+  - output: 'pitch'
+  - output: 'pan'
+    input_range: [0, 1]
+  - output: 'volume'
+    input_range: [0, 1]
 
-  notes: ['B2']
+notes: ['B2']

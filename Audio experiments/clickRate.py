@@ -161,10 +161,10 @@ def freqMap():
 
     phase = np.pi * orbit_progress
     lfo = np.sin(phase)
-    sts.sonify(t, lfo, style="train.yml", duration=(duration * (1 + ring_frac)), system="stereo")
+    sts.sonify(t, lfo, style="style_train.yml", duration=(duration * (1 + ring_frac)), system="stereo")
 
 
-sts.sonify(event_times, sampOnes, style="train.yml", duration=length)
+sts.sonify(event_times, sampOnes, style="style_train.yml", duration=length)
 
 secondDiff = np.diff(betweenTimes)
 diffLen = len(secondDiff)
@@ -196,8 +196,8 @@ for i in range(offSet):
     localMinPos = np.append(localMinPos, [0])
 
 
-sts.sonify(event_times, sampOnes, localMaxPos, style="whistle2.yml", duration=length)
-sts.sonify(event_times, sampOnes, localMinPos, style="whistle1.yml", duration=length)
+sts.sonify(event_times, sampOnes, localMaxPos, style="style_whistle2.yml", duration=length)
+sts.sonify(event_times, sampOnes, localMinPos, style="style_whistle1.yml", duration=length)
 
 sts.save("test13.wav")
 sts.close()
