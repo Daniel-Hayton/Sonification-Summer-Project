@@ -38,7 +38,6 @@ soniLength = dataPoints / (2 * fps)
 soniSample = dataPoints // 2
 soniFiller = np.ones(soniSample)
 
-
 # Physical properties presets
 m = 1e5  # kg
 forceInc = 10000  # N
@@ -47,6 +46,7 @@ t = np.zeros(dataPoints)
 drivingForces = np.zeros(dataPoints)
 breakForces = np.zeros(dataPoints)
 netForces = np.zeros(dataPoints)
+frictions = np.zeros(dataPoints)
 
 # Initialising forces
 drivingForce = 0
@@ -78,12 +78,13 @@ print("Play back speed is x" + str(timeInc * fps))
 
 # Reset the audio file before entering the loop to prevent previous data being outputted
 sts.sonify(t, np.zeros(dataPoints), style="fricStyle.yml", duration=soniLength)
-sts.save("vtSound.wav")
+sts.save("audio_vtSound.wav")
 sts.close()
 
 # Outputs the initial audio
-vtSoni = pg.mixer.Sound("vtSound.wav")
-soniChannel.play(vtSoni)
+initSoni = pg.mixer.Sound("audio_vtSound.wav")
+soniChannel.play(initSoni)
+
 
 # Function that holds the physical relation between the forces, time and velocity
 def vtFunc(t, u, F):
@@ -103,12 +104,17 @@ def rollUpdate(array, curVal):
     return array
 
 
-# Generates and plays sonification of data a few seconds after the data was created and displayed on the graph
-def delayedSoni(times, velocities, drvforces, brkForces, netForces):
+# Converts the sign of each element for an audio location
+def panHandling(array):
+    return (np.sign(array) + 1) / 2
+
+
+# Plays the sonification of the processed data on the left of the graph and process the data for the right side
+def delayedSoni(times, velocities, drvforces, brkForces, netForces, fricForces):
     global frictionless
 
     # Loads and plays the sonification of the previously processed data using pygame sound objects
-    vtSoni = pg.mixer.Sound("vtSound.wav")
+    vtSoni = pg.mixer.Sound("audio_vtSound.wav")
     soniChannel.play(vtSoni)
 
     # Sampling and processing the data while current sonification is playing
@@ -117,6 +123,7 @@ def delayedSoni(times, velocities, drvforces, brkForces, netForces):
     drvSoni = drvforces[-soniSample:]
     brkSoni = brkForces[-soniSample:]
     netSoni = netForces[-soniSample:]
+    fricSoni = fricForces[-soniSample:]
 
     # Generates the audio figure which the sonification will be layered on to
     fig = sts.AudioFigure(system='stereo')
@@ -144,17 +151,16 @@ def delayedSoni(times, velocities, drvforces, brkForces, netForces):
 
     # Generates the sonification for the local maximums and minimums
     if len(minMask) > 0:
-        fig.sonify(tSoni, soniFiller, soniMins, style="whistle1.yml", duration=soniLength, fix_pan=0)
+        fig.sonify(tSoni, soniFiller, soniMins, panHandling(velSoni), style="whistle1.yml", duration=soniLength)
     if len(maxMask) > 0:
-        fig.sonify(tSoni, soniFiller, soniMaxs, style="whistle2.yml", duration=soniLength, fix_pan=1)
+        fig.sonify(tSoni, soniFiller, soniMaxs, panHandling(velSoni), style="whistle2.yml", duration=soniLength, fix_pan=1)
 
     # Cutoff sonification for frictional forces
     if not frictionless:
-        fricSoni = np.abs(fricCalc(velSoni))
-        fig.sonify(tSoni, fricSoni, style="fricStyle.yml", duration=soniLength)
+        soni = fig.sonify(tSoni, np.abs(fricSoni), panHandling(fricSoni), style="fricStyle.yml", duration=soniLength)
 
     # Rhythmic mapping for driving force
-    # soni = fig.sonify(tSoni, np.abs(drvSoni), style="train2.yml", duration=soniLength)
+    fig.sonify(tSoni, np.abs(drvSoni), panHandling(drvSoni), style="train2.yml", duration=soniLength)
 
     # Pitch mapping for the break force
     brkSoni = np.abs(brkSoni)
@@ -176,10 +182,10 @@ def delayedSoni(times, velocities, drvforces, brkForces, netForces):
         # fig.sonify(eventTimes, soniFiller, style="clickety.yml", duration=soniLength)
 
     # Adds ticks to help listener to keep time
-    # soni.add_ticks(increment=1, duration=0.04, tick_vol=1)
+    # soni.add_ticks(increment=(1 / playBack), duration=0.04, tick_vol=0.25)
 
     # Saves the sonification and closes STRAUSS
-    fig.save("vtSound.wav")
+    fig.save("audio_vtSound.wav")
     sts.close()
 
 
@@ -191,10 +197,10 @@ def speak(text):
     try:
         # Generates speech using gtts
         speech = gTTS(text=text.lower(), lang="en", slow=False)
-        speech.save("currentItem.mp3")
+        speech.save("audioCurrentItem.mp3")
 
         # Loads and plays speech with pygame mixer
-        speech = pg.mixer.Sound("currentItem.mp3")
+        speech = pg.mixer.Sound("audioCurrentItem.mp3")
         internetWasConnected = True
 
     except:
@@ -268,6 +274,7 @@ while running:
     drivingForces = rollUpdate(drivingForces, drivingForce)
     breakForces = rollUpdate(breakForces, breakForce)
     netForces = rollUpdate(netForces, netForce)
+    frictions = rollUpdate(frictions, friction)
 
     # Regenerates the sound when a the current sonification runs out
     if sonification and not soniChannel.get_busy():
@@ -276,7 +283,7 @@ while running:
         beforeTime = curTime
         print(gapTime)
         print(curTime)
-        delayedSoni(t, v, drivingForces, breakForces, netForces)
+        delayedSoni(t, v, drivingForces, breakForces, netForces, frictions)
 
     # Generating and plotting the figure
     plt.figure()
