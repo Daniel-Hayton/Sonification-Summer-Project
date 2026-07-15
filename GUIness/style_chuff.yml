@@ -27,6 +27,6 @@ map:
     input_range: [0, 1]
   - output: 'volume'
     input_range: [0, 1]
-    output_range: [0, 0.5]
+    output_range: [0, 0.6]
 
 notes: ['F2']

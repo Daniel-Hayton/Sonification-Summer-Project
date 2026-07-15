@@ -17,10 +17,12 @@ generator:
 
 map:
   - output: 'time'
+
   - output: 'pitch'
   - output: 'pan'
     input_range: [0, 1]
   - output: 'volume'
     input_range: [0, 1]
+    output_range: [0, 0.4]
 
-notes: ['D2']
+notes: ['B4']

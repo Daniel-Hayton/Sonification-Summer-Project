@@ -37,6 +37,7 @@ soniFiller = np.ones(soniSample)
 # Physical properties presets
 m = 1e5  # kg
 forceInc = 10000  # N
+speedLimit = 50  # m/s
 v = np.zeros(dataPoints)
 t = np.zeros(dataPoints)
 drivingForces = np.zeros(dataPoints)
@@ -72,7 +73,7 @@ pg.mouse.set_visible(False)
 print("Play back speed is x" + str(timeInc * fps))
 
 # Reset the audio file before entering the loop to prevent previous data being outputted
-sts.sonify(t, np.zeros(dataPoints), style="style_fricWind.yml", duration=soniLength)
+sts.sonify(t[-soniSample:], soniFiller, style="style_balanced.yml", duration=soniLength)
 sts.save("audio_vtSound.wav")
 sts.close()
 
@@ -89,7 +90,8 @@ def vtFunc(t, u, F):
 
 # Simple quadratic friction calculator
 def fricCalc(velocity):
-    return -np.sign(velocity) * (velocity ** 2) * 80
+    speedLimitFactor = speedLimit / 50
+    return -np.sign(velocity) * ((velocity / speedLimitFactor) ** 2) * 80
 
 
 # Function to update the values in a force array
@@ -139,20 +141,20 @@ def delayedSoni(times, velocities, drvforces, brkForces, netForces, fricForces):
     soniMins = np.zeros(soniSample)
 
     # Sets volumes only for indexes with maxima or minima
-    soniMins[minMask] = np.abs(velSoni[minMask])
-    soniMaxs[maxMask] = np.abs(velSoni[maxMask])
-    # soniMins[minMask] = 1
-    # soniMaxs[maxMask] = 1
+    soniMins[minMask] = np.abs(velSoni[minMask] + 1)
+    soniMaxs[maxMask] = np.abs(velSoni[maxMask] + 1)
 
     # Generates the sonification for the local maximums and minimums
     if len(minMask) > 0:
-        fig.sonify(tSoni, soniFiller, soniMins, panHandling(velSoni), style="style_whistle1.yml", duration=soniLength)
+        fig.sonify(tSoni, soniFiller, soniMins, style="style_whistle1.yml", duration=soniLength)
     if len(maxMask) > 0:
-        fig.sonify(tSoni, soniFiller, soniMaxs, panHandling(velSoni), style="style_whistle2.yml", duration=soniLength, fix_pan=1)
+        fig.sonify(tSoni, soniFiller, soniMaxs, style="style_whistle2.yml", duration=soniLength,
+                   fix_pan=1)
 
     # Cutoff sonification for frictional forces
     if not frictionless:
-        fig.sonify(tSoni, np.abs(fricSoni), panHandling(fricSoni), style="style_fricWind.yml", duration=soniLength)
+        fig.sonify(tSoni, np.abs(fricSoni), panHandling(fricSoni),
+                   style="style_fricWind.yml", duration=soniLength)
 
     # Rhythmic mapping for driving force
     absDrv = np.abs(drvSoni)
@@ -165,11 +167,12 @@ def delayedSoni(times, velocities, drvforces, brkForces, netForces, fricForces):
     if np.max(absBrk) > 0:
         fig.sonify(tSoni, absBrk, panHandling(brkSoni), np.sign(absBrk), style="style_squeaky.yml", duration=soniLength)
 
-    # Gets the integral by using a cumulative sum
-    displacement = np.cumsum(velSoni)
+    # Stops code running when velocity is entirely zero
     absVel = np.abs(velSoni)
-    if np.max(absVel) > 0:  # Stops code running when velocity is entirely zero
-        displacement /= np.max(displacement)  # Normalisation
+    if np.max(absVel) > 0:
+        # Gets the integral by using a cumulative sum
+        displacement = np.cumsum(absVel)
+        displacement /= (2 * speedLimit * soniSample)  # Reduces the frequency of clicks and maps them to the range
 
         # Sets up uniform increments
         incs = np.linspace(0, 1, soniSample + 1)
@@ -177,11 +180,32 @@ def delayedSoni(times, velocities, drvforces, brkForces, netForces, fricForces):
 
         # Interpolation for each sample between 0 and 1
         eventTimes = np.interp(incs, displacement, tSoni)
-        fig.sonify(eventTimes, soniFiller, panHandling(velSoni), np.sign(absVel),
-                   style="style_clickety.yml", duration=soniLength)
 
-    # Adds ticks to help listener to keep time
-    # soni.add_ticks(increment=(1 / playBack), duration=0.04, tick_vol=0.25)
+        # Calculates gaps between trigger times based on velocity, acceleration and jolt
+        velSep = np.diff(eventTimes)
+        accelSep = np.diff(velSep)
+
+        # Calculates the trigger times based on the separations
+        accelTimes = eventTimes[:-2] + accelSep
+
+        # Reducing the event times to fit the graph region
+        maxTime = np.max(eventTimes)
+        eventTimes /= maxTime
+        accelTimes /= maxTime
+
+        # Mapping parameters which are the same for these pares of sonifications
+        velPan = panHandling(velSoni)
+        velVol = np.sign(absVel)
+
+        # Tempo mapping for velocity and acceleration
+        fig.sonify(eventTimes, soniFiller, velPan, velVol,
+                   style="style_clickety.yml", duration=soniLength)
+        # fig.sonify(accelTimes, soniFiller[:-2], velPan[:-2], velVol[:-2],
+        #            style="style_clack.yml", duration=soniLength)
+    absNet = np.abs(netSoni)
+    if np.min(absNet) < 1:
+        netVol = 1 - absNet
+        fig.sonify(tSoni, netVol, style="style_balanced.yml", duration=soniLength)
 
     # Saves the sonification and closes STRAUSS
     fig.save("audio_vtSound.wav")
@@ -210,6 +234,11 @@ def speak(text):
 
     speechChannel.play(speech)
     sleep(speech.get_length())
+
+
+# Returns the forces in a format ready to be given to speak
+def utterable(force):
+    return 1000 * round(force / 1000, 1)
 
 
 # Presents all the forces on the right of the figure
@@ -281,11 +310,11 @@ while running:
 
     # Determine the range of y based on sign of values
     if np.min(v) < 0 < np.max(v):
-        plt.ylim(-50, 50)
+        plt.ylim(-speedLimit, speedLimit)
     elif np.min(v) < 0:
-        plt.ylim(-50, 0)
+        plt.ylim(-speedLimit, 0)
     else:
-        plt.ylim(0, 50)
+        plt.ylim(0, speedLimit)
 
     # Adding Labels to the figure
     plt.xlabel("time, t (s)")
@@ -333,11 +362,10 @@ while running:
                 drivingForce = 0
                 breakForce = 0
             elif event.key == pg.K_s:
-                message = "Driving force " + str(drivingForce) + " Newtons. Break force " + str(breakForce) \
-                          + " Newtons. Net force " + str(netForce) + " Newtons."
+                message = f"Driving force {drivingForce} Newtons. Break force {breakForce} Newtons. Net force {utterable(netForce)} Newtons."
 
                 if not frictionless:
-                    message = message + "Frictional Force " + str(round(friction, 1)) + "Newtons."
+                    message = message + f"Frictional Force {utterable(friction)} Newtons."
 
                 speak(message)
             elif event.key == pg.K_d:
@@ -345,11 +373,11 @@ while running:
             elif event.key == pg.K_b:
                 speak("Break force " + str(breakForce) + "Newtons.")
             elif event.key == pg.K_n:
-                speak("Net force " + str(netForce) + " Newtons.")
+                speak(f"Net force {utterable(netForce)} Newtons.")
             elif event.key == pg.K_v:
-                speak("The current velocity is " + str(round(v[-1], 1)) + "metres per second")
+                speak(f"The current velocity is {v[-1]:.3g} metres per second")
             elif event.key == pg.K_f:
-                speak("Frictional Force " + str(round(friction, 1)) + "newtons")
+                speak(f"Frictional Force {utterable(friction)} newtons")
             elif event.key == pg.K_TAB:
                 frictionless = not frictionless
                 if not frictionless:

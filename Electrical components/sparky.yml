@@ -24,10 +24,10 @@ generator:
     
 map:
   - output: 'time_evo'
-    input_range: [1.5, 12.0]
+    input_range: [0.0, 10.0]
   - output: 'pitch_shift'
   - output: 'volume_lfo/freq_shift'
   - output: 'volume'
-    input_range: [0, 5.0]
+    input_range: [0, 402.58539166171965]
 
-notes: ['E5', 'C7']
+notes: ['C5', 'D7']

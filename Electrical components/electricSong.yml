@@ -11,11 +11,11 @@ generator:
 
 map:
   - output: 'time_evo'
-    input_range: [ 0.0, 22.0 ]
+    input_range: [ 0.0, 10.0 ]
   - output: 'pitch_shift'
   - output: 'volume_lfo/freq_shift'
   - output: 'volume'
-    input_range: [ 0, 12.0 ]
+    input_range: [ 0, 21.00869838163379 ]
   
 
 notes: ['E3']

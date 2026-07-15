@@ -1,4 +1,4 @@
-name: 'squeaky'
+name: 'balanced'
 
 description: ''
 
@@ -7,15 +7,16 @@ sources: 'objects'
 generator:
   type: 'synthesizer'
   preset: 'default'
+  mods:
+    filters: 'on'
+    oscillators:
+      osc1:
+        form: 'sine'
 
 map:
   - output: 'time_evo'
-  - output: 'pitch_shift'
-    input_range: [0, 250000]
-  - output: 'pan'
-    input_range: [0, 1]
   - output: 'volume'
     input_range: [0, 1]
     output_range: [0, 0.3]
 
-notes: ['E5']
+notes: ['C3']
