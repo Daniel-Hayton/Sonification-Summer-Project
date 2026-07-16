@@ -220,10 +220,10 @@ def speak(text):
     try:
         # Generates speech using gtts
         speech = gTTS(text=text.lower(), lang="en", slow=False)
-        speech.save("audio_currentItem.mp3")
+        speech.save("audio_speech.mp3")
 
         # Loads and plays speech with pygame mixer
-        speech = pg.mixer.Sound("audio_currentItem.mp3")
+        speech = pg.mixer.Sound("audio_speech.mp3")
         internetWasConnected = True
 
     except:

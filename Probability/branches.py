@@ -58,7 +58,7 @@ notes: ['{soniNote}']"""
 
         fig.sonify(x, y, fix_pan=audioCoordinates, style="prob.yml", duration=soniLength)
 
-    fig.save("prob.wav")
+    fig.save(f"prob{i+1}.wav")
     fig.render()
     sts.close()
     probSoni = mx.Sound("prob.wav")
