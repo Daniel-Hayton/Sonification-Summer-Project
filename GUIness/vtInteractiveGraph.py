@@ -41,13 +41,13 @@ speedLimit = 50  # m/s
 v = np.zeros(dataPoints)
 t = np.zeros(dataPoints)
 drivingForces = np.zeros(dataPoints)
-breakForces = np.zeros(dataPoints)
+brakeForces = np.zeros(dataPoints)
 netForces = np.zeros(dataPoints)
 frictions = np.zeros(dataPoints)
 
 # Initialising forces
 drivingForce = 0
-breakForce = 0
+brakeForce = 0
 friction = 0
 netForce = 0
 
@@ -162,7 +162,7 @@ def delayedSoni(times, velocities, drvforces, brkForces, netForces, fricForces):
         fig.sonify(tSoni, absDrv, panHandling(drvSoni), np.sign(absDrv),
                    style="style_chuff.yml", duration=soniLength)
 
-    # Pitch mapping for the break force
+    # Pitch mapping for the brake force
     absBrk = np.abs(brkSoni)
     if np.max(absBrk) > 0:
         fig.sonify(tSoni, absBrk, panHandling(brkSoni), np.sign(absBrk), style="style_squeaky.yml", duration=soniLength)
@@ -243,7 +243,7 @@ def utterable(force):
 
 # Presents all the forces on the right of the figure
 def displayForces(forces):
-    forceNames = ["Driving Force", "Break Force", "Net Force", "Friction"]
+    forceNames = ["Driving Force", "Brake Force", "Net Force", "Friction"]
 
     for i in range(0, len(forces)):
         # Making the force ready for display with directional arrows
@@ -284,10 +284,10 @@ while running:
         friction = 0
 
     # Resolves the forces
-    netForce = drivingForce + breakForce + friction
+    netForce = drivingForce + brakeForce + friction
 
-    # Makes sure the break force behaves physically
-    if np.abs(breakForce) > np.abs(drivingForce):
+    # Makes sure the brake force behaves physically
+    if np.abs(brakeForce) > np.abs(drivingForce):
         if np.sign(v[-2]) != np.sign(v[-1]):
             v[-1] = 0
 
@@ -296,13 +296,13 @@ while running:
 
     # Updating the arrays which store the forces
     drivingForces = rollUpdate(drivingForces, drivingForce)
-    breakForces = rollUpdate(breakForces, breakForce)
+    brakeForces = rollUpdate(brakeForces, brakeForce)
     netForces = rollUpdate(netForces, netForce)
     frictions = rollUpdate(frictions, friction)
 
     # Regenerates the sound when a the current sonification runs out
     if sonification and not soniChannel.get_busy():
-        delayedSoni(t, v, drivingForces, breakForces, netForces, frictions)
+        delayedSoni(t, v, drivingForces, brakeForces, netForces, frictions)
 
     # Generating and plotting the figure
     plt.figure()
@@ -331,7 +331,7 @@ while running:
     SCREEN.blit(figImg, figPos)
 
     # Display the forces acting on the graph
-    actingForces = [drivingForce, breakForce, netForce]
+    actingForces = [drivingForce, brakeForce, netForce]
     if not frictionless:
         actingForces.append(friction)
     displayForces(actingForces)
@@ -351,18 +351,18 @@ while running:
                 if int(drivingForce) > -2e5:
                     drivingForce -= forceInc
             elif event.key == pg.K_LEFT:
-                if np.abs(breakForce) <= 0:
-                    breakForce = 0
+                if np.abs(brakeForce) <= 0:
+                    brakeForce = 0
                 else:
-                    breakForce = int(np.abs(breakForce) - forceInc)
+                    brakeForce = int(np.abs(brakeForce) - forceInc)
             elif event.key == pg.K_RIGHT:
-                if np.abs(breakForce) < 2.5e5:
-                    breakForce = int(np.abs(breakForce) + forceInc)
+                if np.abs(brakeForce) < 2.5e5:
+                    brakeForce = int(np.abs(brakeForce) + forceInc)
             elif event.key == pg.K_r:
                 drivingForce = 0
-                breakForce = 0
+                brakeForce = 0
             elif event.key == pg.K_s:
-                message = f"Driving force {drivingForce} Newtons. Break force {breakForce} Newtons. Net force {utterable(netForce)} Newtons."
+                message = f"Driving force {drivingForce} Newtons. Brake force {brakeForce} Newtons. Net force {utterable(netForce)} Newtons."
 
                 if not frictionless:
                     message = message + f"Frictional Force {utterable(friction)} Newtons."
@@ -371,7 +371,7 @@ while running:
             elif event.key == pg.K_d:
                 speak("Driving force " + str(drivingForce) + " Newtons.")
             elif event.key == pg.K_b:
-                speak("Break force " + str(breakForce) + "Newtons.")
+                speak("Brake force " + str(brakeForce) + "Newtons.")
             elif event.key == pg.K_n:
                 speak(f"Net force {utterable(netForce)} Newtons.")
             elif event.key == pg.K_v:
@@ -390,7 +390,7 @@ while running:
             elif event.key == pg.K_LSHIFT:
                 drivingForce = 0
             elif event.key == pg.K_RSHIFT:
-                breakForce = 0
+                brakeForce = 0
             elif event.key == pg.K_SPACE:
                 sonification = not sonification
                 if sonification:
@@ -405,9 +405,9 @@ while running:
 
             # Ensures opposition to the direction of motion
             if drivingForce != 0:
-                breakForce = int(-np.sign(drivingForce) * np.abs(breakForce))
+                brakeForce = int(-np.sign(drivingForce) * np.abs(brakeForce))
             elif v[-1] != 0:
-                breakForce = int(-np.sign(v[-1]) * np.abs(breakForce))
+                brakeForce = int(-np.sign(v[-1]) * np.abs(brakeForce))
 
     # Update screen and increment counter
     pg.display.update()
