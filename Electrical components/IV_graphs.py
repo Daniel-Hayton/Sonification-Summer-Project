@@ -295,6 +295,7 @@ notes: ['E3']
         plt.xlabel("Potential Difference, V (V)")
         plt.ylabel("Current, I (A)")
         plt.grid(color="grey")
+        plt.savefig("electricFig.png")
         plt.show()
 
         # Close for next loop
