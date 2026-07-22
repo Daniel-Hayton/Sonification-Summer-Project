@@ -220,10 +220,10 @@ sts.sonify(event_times, sampOnes, localMaxPos, style="whistle2.yml", duration=le
 sts.sonify(event_times, sampOnes, localMinPos, style="whistle1.yml", duration=length)
 timeKeeper(1)
 
-sts.save("test13.wav")
+# sts.save("test13.wav")
 sts.close()
 
 # Tempo type 1 mapping with tie keeping (Pass)
 sts.sonify(event_times, sampOnes, style="lowClick.yml", duration=length)
 timeKeeper(1)
-sts.save("test14.wav")
+# sts.save("test14.wav")
