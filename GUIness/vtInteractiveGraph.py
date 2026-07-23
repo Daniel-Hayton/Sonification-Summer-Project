@@ -145,9 +145,9 @@ def delayedSoni(times, velocities, drvforces, brkForces, netForces, fricForces):
     soniMaxs[maxMask] = np.abs(velSoni[maxMask] + 1)
 
     # Generates the sonification for the local maximums and minimums
-    if len(minMask) > 0:
+    if np.max(soniMins) > 0:
         fig.sonify(tSoni, soniFiller, soniMins, style="style_whistle1.yml", duration=soniLength)
-    if len(maxMask) > 0:
+    if np.max(soniMaxs) > 0:
         fig.sonify(tSoni, soniFiller, soniMaxs, style="style_whistle2.yml", duration=soniLength,
                    fix_pan=1)
 
@@ -198,14 +198,16 @@ def delayedSoni(times, velocities, drvforces, brkForces, netForces, fricForces):
         velVol = np.sign(absVel)
 
         # Tempo mapping for velocity and acceleration
-        fig.sonify(eventTimes, soniFiller, velPan, velVol,
-                   style="style_clickety.yml", duration=soniLength)
+        fig.sonify(eventTimes, soniFiller, velPan, velVol + lim,
+                   style="style_clickety.yml", duration=soniLength)  # + lim used in vol map as it can't handle 0 vol
         # fig.sonify(accelTimes, soniFiller[:-2], velPan[:-2], velVol[:-2],
         #            style="style_clack.yml", duration=soniLength)
+
     absNet = np.abs(netSoni)
-    if np.min(absNet) < 1:
-        netVol = 1 - absNet
-        fig.sonify(tSoni, netVol, style="style_balanced.yml", duration=soniLength)
+    if np.min(absNet) < 40:
+        netVol = 1 - (absNet / 40)
+        if np.max(netVol) > 0:
+            fig.sonify(tSoni, netVol, style="style_balanced.yml", duration=soniLength)
 
     # Saves the sonification and closes STRAUSS
     fig.save("audio_vtSound.wav")

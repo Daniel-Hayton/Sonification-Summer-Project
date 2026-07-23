@@ -12,7 +12,7 @@ map:
   - output: 'time'
   - output: 'pitch'
   - output: 'volume'
-    input_range: [0,50]
+    input_range: [0, 51]
 
 
 notes: ['B1']
