@@ -1,0 +1,1 @@
+This repository focuses on sonification and its implementation. A full report related to this can be found at https://lti.chirun.org.uk/media/chirun-packages/output/39ae201c-66f4-471f-8681-c4af9c1c93af/index.html.
